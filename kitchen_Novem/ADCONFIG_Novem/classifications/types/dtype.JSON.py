@@ -22,11 +22,13 @@ class TABLE(DataClassification):
     usage = """
             Applies to objects that have a .json[table] member
             """
-    suggestedDataObj = [("jsondata", "PandasData")]
-
+    suggested_data_object = ("jsondata", "PandasData")
+    requirement = MEMBERCONTAINS("get(types)","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE")
+    
 class SETREF(DataClassification):
     name = "SETREF"
     usage  = """
                 refers to other data via a *.setref
              """
     requirement = FILENAME(".*?\.setref") 
+    

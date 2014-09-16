@@ -9,6 +9,7 @@ class SetrefData(generaldata.GeneralData):
     
     _setref = None
     data_object = None
+    setref_fnam = None
     
     def __init__(self, initarg, defer_load = True):
         super(SetrefData, self) .__init__( initarg)
@@ -25,13 +26,19 @@ class SetrefData(generaldata.GeneralData):
         # setref is all header
         #print "jd25: setref load_header", initarg
         if (isinstance(initarg, basestring)):
+            setreffile = initarg+".setref"
             self.filename = initarg
-            jsonfile = open(initarg)
-            self._setref = json.read(jsonfile)
-            jsonfile.close()
+            self.setref_fname = setreffile
+            self.put("properties.setref_file",self.setref_fname)
+            if os.path.exists(self.setref_fname):
+                jsonfile = open(self.setref_fname)
+                self._setref = json.read(jsonfile)
+                jsonfile.close()
         elif (isinstance(initarg, SetrefData)):
-            self._setref = deepcopy(initarg._setref)
-            
+            #print ("jd 33: adapting setref")
+            #print "jd34:", initarg.pretty_string()
+            self.filename = initarg.filename
+            self._setref = initarg._setref
         pass # no header
     
     def load(self, initarg):
@@ -190,8 +197,18 @@ class JSONData(SetrefData):
         
 
 class PandasData(SetrefData):
-    data_frame = None
-    def load(self, df):
-        # does not support file format loads
-        self.data_frame = df
+    assumed_type = "TABLE"
+    dataframe = None
+    #def load_header(self, initarg, **args):
+    #    super(PandasData, self).load_header(self, initarg, **args)
+    def load(self, df=None):
+        if not df:
+            df = self.filename
         
+        import pandas as pd
+        if df.endswith(".txt") or df.endswith(".csv"):
+            self.dataframe = pd.read_csv(df)
+        elif df.endswith(".xls") or df.endswith(".xlsx"):
+            ef = pd.ExcelFile(df)
+            sheet = ef.sheet_names[0]
+            self.dataframe = ef.parse(sheet)
