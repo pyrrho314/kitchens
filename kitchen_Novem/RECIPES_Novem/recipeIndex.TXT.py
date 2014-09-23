@@ -1,5 +1,5 @@
 localAstroTypeRecipeIndex = {
-        "TXT": ["txt_ingest"],
-        "TABLE": ["table_ingest"]
+        "UNINGESTED": ["ingest"],
+        "TABLE": ["table_relate"]
         }
                             

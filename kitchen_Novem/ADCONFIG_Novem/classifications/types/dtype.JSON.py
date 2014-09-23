@@ -7,28 +7,36 @@ class JSON(DataClassification):
     parent = None
     requirement = FILENAME(".*?.json") | HASMEMBER("json")
     
-class TXT(DataClassification):
-    name = "TXT"
+
+class H5(DataClassification):
+    name  = "H5"
     usage = """
-            Applies to filename recognition *.txt.
+            Applies to objects that are Pandas H5 tables.
             """
-    parent = None
-    requirement = OR( FILENAME(".*?\.txt"),
-                      FILENAME(".*?\.csv"))
-                      
-    
-class TABLE(DataClassification):
-    name = "TABLE"
-    usage = """
-            Applies to objects that have a .json[table] member
-            """
-    suggested_data_object = ("jsondata", "PandasData")
-    requirement = MEMBERCONTAINS("get(types)","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE")
+    requirement = FILENAME(".*?\.h5")
     
 class SETREF(DataClassification):
     name = "SETREF"
     usage  = """
                 refers to other data via a *.setref
              """
-    requirement = FILENAME(".*?\.setref") 
+    requirement = PROPERTY("_data.setref", True) | FILENAME(".*?\.setref") 
+
+class TXT(DataClassification):
+    name = "TXT"
+    usage = """
+            Applies to filename recognition *.txt.
+            """
+    parent = None
     
+    requirement = OR( FILENAME(".*?\.txt"),
+                      FILENAME(".*?\.csv")
+                    )
+                   
+class TABLE(DataClassification):
+    name = "TABLE"
+    usage = """
+            Applies to objects that have a .json[table] member
+            """
+    requirement =  (MEMBERCONTAINS("get(types)","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE"))
+                   

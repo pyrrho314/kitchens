@@ -26,6 +26,7 @@
 from __future__ import print_function
 import os
 
+COLOR_ON = True
 
 __ALL__ = [ 'colored', 'cprint' ]
 
@@ -82,7 +83,21 @@ COLORS = dict(
 
 RESET = '\033[0m'
 
-
+def line_color(*argl, **args):
+    text = argl[0]
+    argl = argl[1:]
+    lines = text.split("\n")
+    clines = []
+    maxlinelen = 100
+    maxlinelen = max([ len(ln) for ln in lines])
+    #msg = "tc90: maxlinelen = %s" % maxlinelen
+    #print (msg)
+    for line in lines:
+        pad = " "*(maxlinelen-len(line))
+        line = line+pad
+        clines.append(colored(line, *argl, **args))
+    return "\n".join(clines)
+    
 def colored(text, color=None, on_color=None, attrs=None):
     """Colorize text.
 
@@ -99,7 +114,8 @@ def colored(text, color=None, on_color=None, attrs=None):
         colored('Hello, World!', 'red', 'on_grey', ['blue', 'blink'])
         colored('Hello, World!', 'green')
     """
-    if os.getenv('ANSI_COLORS_DISABLED') is None:
+    
+    if COLOR_ON and (os.getenv('ANSI_COLORS_DISABLED') is None):
         fmt_str = '\033[%dm%s'
         if color is not None:
             text = fmt_str % (COLORS[color], text)

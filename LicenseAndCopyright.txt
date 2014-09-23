@@ -1,0 +1,7 @@
+Copyright (C) 2014 Novem, LLC
+
+All Rights Reserved. This code is not meant to be deployed except by Novem, llc and it's partners. Please 
+return lost copies of the source to Novem, LLC, P.O.Box 582, Bar Harbor, ME 04609.
+
+--- notes
+2014 Summer - kitchen_Novem package created by Craig Allen 2014, requires recipesystem to execute

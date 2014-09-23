@@ -1,0 +1,4 @@
+* h5py   - to let pandas store in hdf5
+* psutil - infrastructure uses it for resource tracking
+* pandas - for table stuff
+* numpy  - pandas uses

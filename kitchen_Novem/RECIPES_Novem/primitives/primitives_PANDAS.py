@@ -15,10 +15,21 @@ class PandasPrimitives(SetRefPrimitives):
             inp.load()
         yield rc
         
+    ## COLUMN_RELATE ##########    
+    def columnRelate(self, rc):
+        for inp in rc.get_inputs():
+            log.stdinfo("rows=%s" % " | ".join( 
+                                        inp.dataframe.columns.values.tolist()
+                                              )
+                       )
+            log.stdinfo("cols=%s" % repr ( inp.dataframe.iloc[0:,0].values ) )
+        yield rc
+        
     def showTables(self, rc):
         start = 0
         end = 10
         for inp in rc.get_inputs():
+            
             log.stdinfo(inp.dataframe[start:end].to_string())
         yield rc
         
@@ -26,3 +37,5 @@ class PandasPrimitives(SetRefPrimitives):
         for inp in rc.get_inputs():
             log.stdinfo("showTables (pP21):\n %s " % repr(inp.dataframe.describe()))
             yield rc
+    
+    
