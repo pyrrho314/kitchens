@@ -1,5 +1,5 @@
 localPrimitiveIndex = {
-    "TXT": ("primitives_SETREF.py", "SetRefPrimitives"),
+    "TXT": ("primitives_TXT.py", "TxtPrimitives"),
     "SETREF": ("primitives_SETREF.py", "SetRefPrimitives"),
     "TABLE": ("primitives_PANDAS.py", "PandasPrimitives")
     }

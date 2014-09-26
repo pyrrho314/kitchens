@@ -1,7 +1,10 @@
+import os
+
 from astrodata.ReductionObjects import PrimitiveSet
 from astrodata.adutils import logutils, ksutil
 from astrodata.AstroDataType import globalClassificationLibrary as gCL
 from primitives_SETREF import SetRefPrimitives
+import pandas as pd
 
 from astrodata.generaldata import GeneralData
 
@@ -29,8 +32,12 @@ class PandasPrimitives(SetRefPrimitives):
         start = 0
         end = 10
         for inp in rc.get_inputs():
-            
+            df = inp.dataframe
+            log.stdinfo( str(inp.dataframe.columns.get_values()) )
+            types = df.apply(lambda x: pd.lib.infer_dtype(x.values))
+            log.stdinfo( str(inp.dataframe.columns.get_values()))
             log.stdinfo(inp.dataframe[start:end].to_string())
+            
         yield rc
         
     def summarizeTables(self, rc):
@@ -38,4 +45,19 @@ class PandasPrimitives(SetRefPrimitives):
             log.stdinfo("showTables (pP21):\n %s " % repr(inp.dataframe.describe()))
             yield rc
     
-    
+    def setStorage(self, rc):
+        storage = rc["storage"]
+        if not storage:
+            log.stdinfo("no storage type indicated")
+            
+        for inp in rc.get_inputs():
+            if inp.supports_storage(storage):
+                inp.load()
+                fname = inp.filename
+                inp.use_storage(storage)
+                log.debug("Changed storage from %s to %s" % (os.path.basename(fname), inp.basename))
+            else:
+                fname = inp.filename
+                log.stdinfo("%s does not support '%s' storage" % (os.path.basename(fname), storage))
+            rc.report_output(inp)    
+        yield rc          

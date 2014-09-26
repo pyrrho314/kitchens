@@ -19,13 +19,16 @@ class SetRefPrimitives(PrimitiveSet):
             
             rec = inp.recommend_data_object()
             log.stdinfo("adaptSetType: recommended dataset object %s" % rec)
-            # we'll take the random first if there is more than one recommendation, atm
-            typ = None
             mandc = None
-            for typ in rec:
-                mandc = rec[typ]
-                if mandc:
-                    break
+                
+            if rec:
+                # we'll take the random first if there is more than one recommendation, atm
+                    
+                typ = None
+                for typ in rec:
+                    mandc = rec[typ]
+                    if mandc:
+                        break
                 
             if mandc:
                 mod,clas = mandc
@@ -50,9 +53,9 @@ class SetRefPrimitives(PrimitiveSet):
                 log.info("%s stays" % inp.basename)
                 rc.report_output(inp)
             else:
-                notstream = "not %s" % outtyp
-                log.info("%s goes on %s" % (inp.basename, notstream))
-                rc.report_output(inp, stream= notstream)
+                notstream = "not_%s" % outtyp
+                log.info("%s goes in stream '%s'" % (inp.basename, notstream))
+                #rc.report_output(inp, stream= notstream)
         yield rc
     def goInteractive(self, rc):
         import code
@@ -60,10 +63,14 @@ class SetRefPrimitives(PrimitiveSet):
         yield rc
     
     def markAsIngested(self, rc):
-        for inp in rc.get_inputs():
+        inps = rc.get_inputs()
+        
+        for inp in inps:
             inp.prop_put("_data.ingested", True)
             inp.prop_put("_data.ingested_as", inp.get_types())
             rc.report_output(inp)
+        log.stdinfo("marked %d dataset%s" % (len(inps),
+                                             "" if len(inps)==1 else "s") )
         yield rc 
     
     ## NATIVESTORAGE ###########
@@ -72,11 +79,12 @@ class SetRefPrimitives(PrimitiveSet):
         retv = None
         for inp in rc.get_inputs():
             origname = inp.filename
+            inp.load()
             retv = inp.nativeStorage()
             if retv:
                 log.info("changed to nativeStorage for \n\t   %s \n\tto %s" % (origname, inp.filename))
             else:
-                log.info("kept currentStorage for %s" % filename)
+                log.info("kept currentStorage for %s" % inp.filename)
         yield rc
            
     def reduceToHeader(self, rc):
@@ -104,16 +112,18 @@ class SetRefPrimitives(PrimitiveSet):
                 tstr = inp.pretty_string()
             i += 1
             log.stdinfo(tc.colored("#%d"%i, "grey", "on_white"))
-            log.stdinfo(tc.colored("filename  :", attrs=["bold"]) + " %s/%s"  % (inp.dirname,
-                                                                                tc.colored( inp.basename, 
-                                                                                            attrs=["bold"])
-                                                                               )
-                                  )
-            log.stdinfo(tc.colored("data types:", attrs=["bold"]) + " %s" % repr(inp.get_types()))
-            log.stdinfo(tc.colored("data_obj  :",attrs=["bold"])    + " %s" % repr(inp))
             log.info(tstr)
         yield rc
-    
+        
+    def writeAndDrop(self, rc):
+        settype = rc["settype"]
+        if settype == None:
+            log.stdinfo("writeAndDrop: nothing to do")
+            yield rc.finish()
+        for inp in rc.get_inputs():
+            if inp.is_type(settype):
+                inp.write()
+        
     def writeOutputs(self, rc):
         for inp in rc.get_inputs():
             suffix = None

@@ -8,6 +8,7 @@ from glob import glob
 import re 
 import shutil
 import termcolor as tc
+import pandas as pd
 
 class SetrefData(generaldata.GeneralData):
     
@@ -21,16 +22,21 @@ class SetrefData(generaldata.GeneralData):
     def __init__(self, initarg, force_load = None):
         super(SetrefData, self) .__init__( initarg)
         
-        self._setref = {}
+        self._initialize_()
         self.initarg = initarg
         self._accept_initarg(initarg)
-        self.output_directory = os.getcwd()
         if force_load:
             self.load()
         else:
             self.load_header()
-        self.put("_data.setref", True)
             
+    def _initialize_(self):
+        if not self._setref:
+            self._setref = {}
+        if not self.output_directory:
+            self.output_directory  = os.getcwd()
+        self.put("_data.setref", True)
+        
         # print "jd30: Setref.__init__ filename", self.filename
     def __repr__(self):
         pstr = super(SetrefData, self).__repr__()
@@ -41,7 +47,9 @@ class SetrefData(generaldata.GeneralData):
         if isinstance(initarg, basestring):
             self.filename = initarg
         else:
-            self.filename = initarg.filename
+            if hasattr(initarg, "filename"):
+                self.filename = initarg.filename
+        # OPTIMIZE: memory, keeps initializer around, could be other object!
         self.initarg = initarg
         
     def _get_setref_fname(self):
@@ -95,7 +103,7 @@ class SetrefData(generaldata.GeneralData):
         frev = 0;
         if os.path.exists(self.filename):
             # break down filename
-            flist = glob("%s;*"%self.filename)
+            flist = glob("_fs_versions/%s;*"%self.basename)
             if len(flist):
                 vers = []
                 for f in flist:
@@ -105,20 +113,28 @@ class SetrefData(generaldata.GeneralData):
                 frev = max(vers)+1
             else:
                 frev = 1
-            movefname = "%s;%d" % (self.filename, frev)
+            movepath = os.path.join(self.dirname, "_fs_versions")
+            if not os.path.exists(movepath):
+                os.makedirs(movepath)
+            movebname = "%s;%d" % (self.basename, frev)
+            movefname = os.path.join(movepath, movebname)
             shutil.move(self.filename, movefname)
             if os.path.exists(self.setref_fname):
-                movesetref_fname = "%s;%d" % (self.setref_fname, frev)
+                
+                movesetref_basename = "%s;%d" % (os.path.basename(self.setref_fname), frev)
+                movesetref_fname = os.path.join(movepath, movesetref_basename)
+                
                 shutil.move(self.setref_fname, movesetref_fname) 
     #       
     # private functions section (end)
     #################################
-                    
+    def allow_extant_write(self):
+        return True # we just us the file stack                
     def load_header(self):
         # setref is all header
         self._make_setref_fname()
         if os.path.exists(self.setref_fname):
-            print "jd57: load_header setref_fname = "+self.setref_fname
+            # print "jd57: load_header setref_fname = "+self.setref_fname
             jsonfile = open(self.setref_fname)
             self._setref = json.load(jsonfile)
             jsonfile.close()
@@ -137,6 +153,7 @@ class SetrefData(generaldata.GeneralData):
         srf.close()
         pass
         
+   
     def pretty_string(self, start_indent = 0):
         retstr = ""
         
@@ -171,7 +188,9 @@ class SetrefData(generaldata.GeneralData):
         if not (val in curlist) or (not unique):
             curlist.append(val)
         
-                
+    def nativeStorage(self):
+        return None # no action, no storage
+      
     def get(self, keystring, create_path = False):
         t,key = self._getref(keystring, put = create_path)
         
@@ -196,9 +215,24 @@ class SetrefData(generaldata.GeneralData):
     prop_put = put
     prop_add = add
     
+class ReferenceOnlyData(SetrefData):
+    """ Sort of thought up as a generalization of the situation where
+        I have a table that is not standard csv to parse.  We want to track it
+        eventually to parse it... no need to copy the data out of the source directory though.
+    """
+    def _push_file_stack(self):
+        # don't do this, we don't write files
+        return 
+        
+    def write(self, *args, **argv):
+        """ text does not want to write IT's own data, but just keep the set reference """
+        self.put("_data.filename", self.filename)
+        super(ReferenceOnlyData, self).do_write(self.filename)
+        return False
+    
+       
 
-
-class TxtData(SetrefData):
+class TxtData(ReferenceOnlyData):
     """Used for detecting how to load a text file,
         including csv and json. 
     """
@@ -228,10 +262,13 @@ class TxtData(SetrefData):
             
         txtfile.close();   
 
+    
+
 class JSONData(SetrefData):
     json = None
     filename = None
     initarg = None
+    
     def __init__(self, initarg, defer_load = True):
         super(JSONData, self) .__init__( initarg)
         self.json = {}
@@ -299,14 +336,29 @@ class JSONData(SetrefData):
 
 class PandasData(SetrefData):
     assumed_type = "TABLE"
+    _dataframe = None
+    _loaded = False
+    _supported_storage = {
+            "h5" : "%(basename)s.h5",
+            "csv": "%(basename)s.csv",
+            "xls": "%(basename)s.xls"
+        }
     # user hasattr rather than none_dataframe = None
     #def load_header(self, initarg, **args):
     #    super(PandasData, self).load_header(self, initarg, **args)
     
+    def __init__(self, initarg, **argv):
+        if isinstance(initarg, list):
+            self._initialize_()
+            self.dataframe = pd.DataFrame(initarg)
+            self._loaded = True
+            
+        else:
+            super(PandasData, self).__init__(initarg, **argv)
     ## properties ##
     #
     def _get_dataframe(self):
-        if not hasattr(self, "_dataframe"):
+        if not self._loaded:
             self.load()
         return self._dataframe
     
@@ -321,22 +373,100 @@ class PandasData(SetrefData):
     
     #
     ## properties (end) ##
+    
+    def clean_data(self):
+        # NOT NEEDED ATM
+        return
+        
+        df = self.dataframe
+        types = df.dtypes
+        
+        infered = df.apply (lambda x: pd.lib.infer_dtype(x.values)) 
+        print "jd390:df.dtypes\n", types
+        print "jd392:df infer dtype\n", type(infered)
+        print "jd393:infered", infered
+        print "jd394: -----"
+        for col in infered.index[infered == "mixed"]:
+            print "jd394: col =", col
+            print "jd397: ", df[col].index
+            def enc(x):
+                if isinstance(x, basestring):
+                    return x.encode("utf-8")
+                else:
+                    import traceback
+                    print tc.colored("-"*20, "white", "on_grey")
+                    traceback.print_stack()
+                    print tc.colored("-"*20, "white", "on_grey")
+                    return str(x)                
+            for ind in df[col].index:
+                df[col][ind] =  enc(df[col][ind])
+        
+        for col in infered.index[infered == "mixed"]:
+            print "jd394: col =", col
+            print "jd397: ", df[col].index
+            def enc(x):
+                if isinstance(x, basestring):
+                    return str(x)
+                else:
+                    import traceback
+                    print tc.colored("-"*20, "white", "on_grey")
+                    traceback.print_stack()
+                    print tc.colored("-"*20, "white", "on_grey")
+                    return str(x)                
+            for ind in df[col].index:
+                df[col][ind] =  enc(df[col][ind])
+        
+    
     def do_write(self, filename, rename=False):
+        
         #print "jd209: dowrite",filename
         # this writes the setref loose header/data note
         super(PandasData, self).do_write(filename, rename)
         #print "jd212: pandas write", self.filename
         # this writes the dataframe
-        if self.filename.endswith(".h5"):
+        # @@TODO: change to use the self._supported_storage dictionary
+        if  self.filename.endswith(".h5"):
             self.dataframe.to_hdf(self.filename, "table")
+        elif self.filename.endswith(".csv"):
+            self.dataframe.to_csv(self.filename)
+        elif self.filename.endswith(".xls"):
+            sheetname = self.get("_data.sheetname")
+            print "jd348: sheetname =", sheetname
+            self.dataframe.to_excel(self.filename, sheetname)
+                    
+    def load(self, df=None):
+        super(PandasData, self).load()
+        self._loaded = True
+        if not df:
+            df = self.filename
+        
+        import pandas as pd
+        
+        
+        if df.endswith(".txt") or df.endswith(".csv"):
+            self.dataframe = pd.read_csv(df)
+        
+        elif df.endswith(".xls") or df.endswith(".xlsx"):
+            ef = pd.ExcelFile(df)
+            sheet = ef.sheet_names[0]
+            self.put("_data.sheetname", sheet)
             
+            self.dataframe = ef.parse(sheet).dropna(1,"any")
+            
+            self.clean_data()
+        elif df.endswith(".h5"):
+            self.dataframe = pd.read_hdf(df, "table")
+                        
     def nativeStorage(self):
+        self.use_storage("h5")
+    native_storage = nativeStorage
+    
+    def use_storage(self, storetype = None):
         # I prefer hdf5 at the moment
         name, ext = os.path.splitext(self.filename)
-        
-        newfilename = "%s.h5" %name
+        if storetype in self._supported_storage:
+            newfilename = self._supported_storage[storetype] % {"basename":name}
         if newfilename == self.filename:
-        
             return False # no change needed
         else:    
             oldfilename = self.filename
@@ -344,19 +474,6 @@ class PandasData(SetrefData):
             self.put("filename",self.filename)   
             self.add("history.previous_filenames", oldfilename)
             return True # ok, changed
-        
-    def load(self, df=None):
-        super(PandasData, self).load()
-        if not df:
-            df = self.filename
-        
-        import pandas as pd
-        if df.endswith(".txt") or df.endswith(".csv"):
-            self.dataframe = pd.read_csv(df)
-        elif df.endswith(".xls") or df.endswith(".xlsx"):
-            ef = pd.ExcelFile(df)
-            sheet = ef.sheet_names[0]
-            self.dataframe = ef.parse(sheet)
-        elif df.endswith(".h5"):
-            print "jd281: h5"
-            self.dataframe = pd.read_hdf(df, "table")
+    
+    def supports_storage(self, storage):
+        return storage in self._supported_storage

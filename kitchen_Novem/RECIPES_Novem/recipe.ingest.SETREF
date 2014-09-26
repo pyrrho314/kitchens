@@ -1,7 +1,11 @@
 showInputs
 adaptSetType
-showInputs
+# showInputs
 nativeStorage
-showInputs
+# showInputs
 markAsIngested
+filterOutNot(settype=TXT)
 showInputs
+parseAsDataDictionary
+showInputs
+showTables

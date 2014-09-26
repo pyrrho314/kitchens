@@ -27,7 +27,7 @@ class TXT(DataClassification):
     usage = """
             Applies to filename recognition *.txt.
             """
-    parent = None
+    parent = "SETREF"
     
     requirement = OR( FILENAME(".*?\.txt"),
                       FILENAME(".*?\.csv")
@@ -38,5 +38,6 @@ class TABLE(DataClassification):
     usage = """
             Applies to objects that have a .json[table] member
             """
+    parent = "SETREF"
     requirement =  (MEMBERCONTAINS("get(types)","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE"))
                    
