@@ -39,5 +39,10 @@ class TABLE(DataClassification):
             Applies to objects that have a .json[table] member
             """
     parent = "SETREF"
-    requirement =  (MEMBERCONTAINS("get(types)","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE"))
+    requirement =  (MEMBERCONTAINS("get('types')","TABLE") | MEMBERCONTAINS("assumed_type", "TABLE"))
                    
+class METROBUSINESS(DataClassification):
+    name = "METROBUSINESS"
+    parent = "TABLE"
+    usage = """ Applies to tables from the US Census Beaureau on Business Patterns by Metro Area, US """    
+    requirement = HASMEMBER("dataframe") & MEMBERCONTAINS("dataframe.columns", "n1_4")              

@@ -5,7 +5,9 @@ nativeStorage
 # showInputs
 markAsIngested
 filterOutNot(settype=TXT)
+#writeAndDrop(settype=TABLE)
 showInputs
-parseAsDataDictionary
+parseAsSpecial
 showInputs
 showTables
+writeOutputs

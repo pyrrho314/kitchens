@@ -50,18 +50,21 @@ class SetRefPrimitives(PrimitiveSet):
             typs = inp.get_types()
             outtyp = rc["settype"]
             if outtyp in typs:
-                log.info("%s stays" % inp.basename)
+                log.status("%s stays" % inp.basename)
                 rc.report_output(inp)
             else:
                 notstream = "not_%s" % outtyp
-                log.info("%s goes in stream '%s'" % (inp.basename, notstream))
-                #rc.report_output(inp, stream= notstream)
+                log.status("%s goes in stream '%s'" % (inp.basename, notstream))
+                rc.report_output(inp, stream= notstream)
         yield rc
+    filterNot = filterOutNot
+    
     def goInteractive(self, rc):
         import code
         code.interact(local=locals())
         yield rc
-    
+    def parseAsSpecial(self, rc):
+        yield rc
     def markAsIngested(self, rc):
         inps = rc.get_inputs()
         
@@ -103,7 +106,7 @@ class SetRefPrimitives(PrimitiveSet):
 #        log.fullinfo("helloWorld")
         import termcolor as tc
         inps = rc.get_inputs(); # print "primitives_NOVEM: JSONPrimitives.helloWorld(..)"
-        log.stdinfo("%d inputs" % len(inps))
+        log.status("%d inputs" % len(inps))
         i = 0
         for inp in inps:
             if rc["use_repr"]:
@@ -111,8 +114,9 @@ class SetRefPrimitives(PrimitiveSet):
             else:
                 tstr = inp.pretty_string()
             i += 1
-            log.stdinfo(tc.colored("#%d"%i, "grey", "on_white"))
-            log.info(tstr)
+            log.status(tc.colored("#%d"%i, "grey", "on_white"))
+            log.status(tstr)
+            log.info(inp.pretty_setref())
         yield rc
         
     def writeAndDrop(self, rc):
@@ -123,6 +127,8 @@ class SetRefPrimitives(PrimitiveSet):
         for inp in rc.get_inputs():
             if inp.is_type(settype):
                 inp.write()
+            else:
+                rc.report_output(inp)
         
     def writeOutputs(self, rc):
         for inp in rc.get_inputs():

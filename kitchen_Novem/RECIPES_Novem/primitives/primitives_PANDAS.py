@@ -5,13 +5,21 @@ from astrodata.adutils import logutils, ksutil
 from astrodata.AstroDataType import globalClassificationLibrary as gCL
 from primitives_SETREF import SetRefPrimitives
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from astrodata.generaldata import GeneralData
+
+try:
+    import termcolor
+    COLORSTR = termcolor.line_color
+except:
+    COLORSTR = lambda arg: arg 
+    
 
 log = logutils.get_logger(__name__)
 
 class PandasPrimitives(SetRefPrimitives):
-    astrotype = "JSON"
+    astrotype = "TABLE"
     
     def loadTables(self, rc):
         for inp in rc.get_inputs():
@@ -28,14 +36,60 @@ class PandasPrimitives(SetRefPrimitives):
             log.stdinfo("cols=%s" % repr ( inp.dataframe.iloc[0:,0].values ) )
         yield rc
         
-    def showTables(self, rc):
-        start = 0
-        end = 10
+    def plot(self, rc):
+        """general table plot just calls Pandas Plot with a convienience plot, not particularly useful for
+            table data in general, and possibly time sensitive"""
+        numrows = int(rc["num_rows"]) if rc["num_rows"] else 1000
+        yaxis = rc["yaxis"] if rc["yaxis"] else None
+        for inp in rc.get_inputs():
+            inp.dataframe[:numrows].plot(y=yaxis)
+            plt.show()
+            yield rc
+    
+    def plotly(self, rc):
+        import plotly.plotly as py
+        from plotly.graph_objs import Layout,Figure
+        def df_to_iplot(inp):
+            
+            '''
+            Coverting a Pandas Data Frame to Plotly interface
+            '''
+            df = inp.dataframe
+            del df["est"]
+            lines={}
+            x = df.columns.values[2:]
+            for i in range(len(df)):
+                row = df.iloc[i]
+                key = row["industry"]
+                lines[key]={}
+                lines[key]["x"]=x
+                lines[key]["y"]=row[2:].values
+                lines[key]["name"]=key
+                #Appending all lines
+            lines_plotly=[lines[key] for key in lines]
+            return lines_plotly
+
+        py.sign_in("pyrrho", "04n3iw0mae")
+
         for inp in rc.get_inputs():
             df = inp.dataframe
-            log.stdinfo( str(inp.dataframe.columns.get_values()) )
+            data = df_to_iplot(inp)
+            layout = Layout(
+                    title = inp.basename
+                    )
+            fig = Figure(data=data, layout=layout)
+            unique_url = py.plot(data, filename = inp.basename, auto_open=False)
+            log.status("plot for %s found at %s" % (inp.basename, unique_url))
+        yield rc         
+    def showTables(self, rc):
+        start = 0
+        end = 20
+        for inp in rc.get_inputs():
+            log.stdinfo( "File: %s" % COLORSTR(inp.basename, attrs=["bold"]))
+            df = inp.dataframe
+            #log.stdinfo( str(inp.dataframe.columns.get_values()) )
             types = df.apply(lambda x: pd.lib.infer_dtype(x.values))
-            log.stdinfo( str(inp.dataframe.columns.get_values()))
+            #log.stdinfo( str(inp.dataframe.columns.get_values()))
             log.stdinfo(inp.dataframe[start:end].to_string())
             
         yield rc

@@ -170,10 +170,12 @@ class SetrefData(generaldata.GeneralData):
         retstr += "\n%s%s" % (ksutil.calc_fulltab(start_indent) , reprstring)
         
         
-        retstr += ksutil.dict2pretty("_setref", self._setref, indent = start_indent)
-        
         return retstr
     
+    def pretty_setref(self, start_indent = 0):
+        retstr = ""
+        retstr += ksutil.dict2pretty("_setref", self._setref, indent = start_indent)
+        return retstr
     
 
     def add(self, keystring, val, unique = False):
@@ -352,7 +354,12 @@ class PandasData(SetrefData):
             self._initialize_()
             self.dataframe = pd.DataFrame(initarg)
             self._loaded = True
-            
+            self.filename = "unnamed.h5"
+        if isinstance(initarg, pd.DataFrame):
+            self._initialize_()
+            self.dataframe = initarg
+            self._loaded = True 
+            self.filename = "unnamed.h5"   
         else:
             super(PandasData, self).__init__(initarg, **argv)
     ## properties ##
@@ -363,6 +370,7 @@ class PandasData(SetrefData):
         return self._dataframe
     
     def _set_dataframe(self, val):
+        #self.is_changed()
         self._dataframe = val
         return
     
@@ -415,7 +423,6 @@ class PandasData(SetrefData):
                     return str(x)                
             for ind in df[col].index:
                 df[col][ind] =  enc(df[col][ind])
-        
     
     def do_write(self, filename, rename=False):
         
@@ -451,9 +458,9 @@ class PandasData(SetrefData):
             sheet = ef.sheet_names[0]
             self.put("_data.sheetname", sheet)
             
-            self.dataframe = ef.parse(sheet).dropna(1,"any")
+            self.dataframe = ef.parse(sheet).dropna()
             
-            self.clean_data()
+            #self.clean_data()
         elif df.endswith(".h5"):
             self.dataframe = pd.read_hdf(df, "table")
                         
