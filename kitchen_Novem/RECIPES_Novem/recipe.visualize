@@ -1,0 +1,2 @@
+showTables
+plot(col="msa")
