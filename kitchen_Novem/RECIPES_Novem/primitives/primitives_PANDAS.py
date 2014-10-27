@@ -84,13 +84,23 @@ class PandasPrimitives(SetRefPrimitives):
     def showTables(self, rc):
         start = 0
         end = 20
+        
+        display=None
+        
+        #try:
+        #    from IPython.display import display
+        #except:
+        #    dipslay = None
         for inp in rc.get_inputs():
             log.stdinfo( "File: %s" % COLORSTR(inp.basename, attrs=["bold"]))
             df = inp.dataframe
             #log.stdinfo( str(inp.dataframe.columns.get_values()) )
             types = df.apply(lambda x: pd.lib.infer_dtype(x.values))
             #log.stdinfo( str(inp.dataframe.columns.get_values()))
-            log.stdinfo(inp.dataframe[start:end].to_string())
+            if display:
+                display(inp.dataframe[start:end])
+            else:
+                log.stdinfo(inp.dataframe[start:end].to_string())
             
         yield rc
         
