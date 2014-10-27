@@ -5,7 +5,7 @@ from astrodata.adutils import logutils, ksutil
 from astrodata.AstroDataType import globalClassificationLibrary as gCL
 from primitives_SETREF import SetRefPrimitives
 import pandas as pd
-import matplotlib.pyplot as plt
+
 
 from astrodata.generaldata import GeneralData
 
@@ -39,6 +39,7 @@ class PandasPrimitives(SetRefPrimitives):
     def plot(self, rc):
         """general table plot just calls Pandas Plot with a convienience plot, not particularly useful for
             table data in general, and possibly time sensitive"""
+        import matplotlib.pyplot as plt
         numrows = int(rc["num_rows"]) if rc["num_rows"] else 1000
         yaxis = rc["yaxis"] if rc["yaxis"] else None
         for inp in rc.get_inputs():

@@ -2,3 +2,4 @@
 * psutil - infrastructure uses it for resource tracking
 * pandas - for table stuff
 * numpy  - pandas uses
+* matplotlib - for plotting
