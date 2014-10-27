@@ -7,7 +7,7 @@ from copy import copy, deepcopy
 from glob import glob
 import re 
 import shutil
-import termcolor as tc
+from astrodata import termcolor as tc
 import pandas as pd
 
 class SetrefData(generaldata.GeneralData):
