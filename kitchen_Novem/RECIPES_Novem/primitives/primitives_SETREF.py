@@ -104,7 +104,7 @@ class SetRefPrimitives(PrimitiveSet):
     
     def showInputs(self, rc):
 #        log.fullinfo("helloWorld")
-        import termcolor as tc
+        from astrodata import termcolor as tc
         inps = rc.get_inputs(); # print "primitives_NOVEM: JSONPrimitives.helloWorld(..)"
         log.status("%d inputs" % len(inps))
         i = 0
