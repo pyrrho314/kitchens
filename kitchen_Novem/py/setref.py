@@ -8,7 +8,7 @@ from copy import copy, deepcopy
 from glob import glob
 import re 
 import shutil
-import termcolor as tc
+from astrodata.adutils import termcolor as tc
 
 class SetrefData(generaldata.GeneralData):
     
@@ -17,7 +17,7 @@ class SetrefData(generaldata.GeneralData):
     setref_fname = None
     _setref_fname = None
     initarg = None
-    
+    _meta_map = None
     
     def __init__(self, initarg, force_load = None):
         super(SetrefData, self) .__init__( initarg)
@@ -25,6 +25,8 @@ class SetrefData(generaldata.GeneralData):
         self._initialize_()
         self.initarg = initarg
         self._accept_initarg(initarg)
+        self._meta_map = {}
+        
         if force_load:
             self.load()
         else:
@@ -70,19 +72,27 @@ class SetrefData(generaldata.GeneralData):
     #
     # file stack
     def _getref(self, keystring, put=False, struct = None):
+        import re
         d = None
         if struct:
             d = struct
         else:
             d = self._setref
         keys = keystring.split(".")
+        
         t = d
-        for key in keys[0:-1]:
+        allbutlast = keys[:-1]
+        if len(allbutlast):
+            for key in allbutlast:
+                if not put and not key in t:
+                    return (None, None)
+                if not key in t:
+                    t[key] = {}
+                t = t[key]
+        else:
+            key = keys[-1]
             if not put and not key in t:
                 return (None, None)
-            if not key in t:
-                t[key] = {}
-            t = t[key]
         return t, keys[-1]
         
     def _push_file_stack(self):
@@ -192,7 +202,8 @@ class SetrefData(generaldata.GeneralData):
         
     def nativeStorage(self):
         return None # no action, no storage
-      
+    
+    #### PROPERTIES
     def get(self, keystring, create_path = False):
         t,key = self._getref(keystring, put = create_path)
         
@@ -202,6 +213,7 @@ class SetrefData(generaldata.GeneralData):
             return None
     def prop_exists(self, keystring):
         t,key = self._getref(keystring)
+        #print "sr205:", t,key, keystring
         if t:
             return True
         else:
@@ -209,7 +221,15 @@ class SetrefData(generaldata.GeneralData):
     def put(self, keystring, val):
         t,key = self._getref(keystring, put=True)
         t[key] = val
+    
+    def meta(self, key):
+        propname = self._meta_map[key]
+        self.get(propname)
         
+    def add_meta_map(self, key, propname):
+        self._meta_map[key] = propname
+            
+    
     def close(self):
         pass
         
@@ -227,7 +247,8 @@ class ReferenceOnlyData(SetrefData):
         return 
         
     def write(self, *args, **argv):
-        """ text does not want to write IT's own data, but just keep the set reference """
+        """ Some data, like text format, does not want to write IT's own data, but just keep the set reference.
+        It's essentially read only, but you can write the metadata into the .setref file """
         self.put("_data.filename", self.filename)
         super(ReferenceOnlyData, self).do_write(self.filename)
         return False

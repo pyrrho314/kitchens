@@ -10,7 +10,7 @@ import pandas as pd
 from astrodata.generaldata import GeneralData
 
 try:
-    import termcolor
+    from astrodata.adutils import termcolor
     COLORSTR = termcolor.line_color
 except:
     COLORSTR = lambda arg: arg 
@@ -82,6 +82,7 @@ class PandasPrimitives(SetRefPrimitives):
             unique_url = py.plot(data, filename = inp.basename, auto_open=False)
             log.status("plot for %s found at %s" % (inp.basename, unique_url))
         yield rc         
+        
     def showTables(self, rc):
         start = 0
         end = 20

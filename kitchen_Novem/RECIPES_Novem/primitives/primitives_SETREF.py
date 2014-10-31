@@ -63,8 +63,11 @@ class SetRefPrimitives(PrimitiveSet):
         import code
         code.interact(local=locals())
         yield rc
+    
     def parseAsSpecial(self, rc):
         yield rc
+    
+    
     def markAsIngested(self, rc):
         inps = rc.get_inputs()
         
@@ -104,7 +107,7 @@ class SetRefPrimitives(PrimitiveSet):
     
     def showInputs(self, rc):
 #        log.fullinfo("helloWorld")
-        from astrodata import termcolor as tc
+        from astrodata.adutils import termcolor as tc
         inps = rc.get_inputs(); # print "primitives_NOVEM: JSONPrimitives.helloWorld(..)"
         log.status("%d inputs" % len(inps))
         i = 0

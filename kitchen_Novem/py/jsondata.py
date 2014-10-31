@@ -1,3 +1,8 @@
+# Copyright (C) 2014 Novem LLC, created Craig Allen 2014
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.import generalclassification
+
 import sys,os
 import json
 import pprint
@@ -7,10 +12,10 @@ from copy import copy, deepcopy
 from glob import glob
 import re 
 import shutil
-from astrodata import termcolor as tc
+from astrodata.adutils import termcolor as tc
 import pandas as pd
 
-from setref import SetrefData
+from setref import SetrefData, ReferenceOnlyData
 
 class TxtData(ReferenceOnlyData):
     """Used for detecting how to load a text file,
