@@ -60,8 +60,8 @@ class SetrefData(generaldata.GeneralData):
         else:
             if hasattr(initarg, "filename"):
                 self.filename = initarg.filename
-        # OPTIMIZE: memory, keeps initializer around, could be other object!
-        self.initarg = initarg
+        # OPTIMIZEd: memory, keeps initializer around, could be other object!
+        # REMOVED:self.initarg = initarg
     # metadata... just those with alias'
     def _get_metadata(self):
         """creates a new structure containing metadata collected from _setref member.
@@ -79,6 +79,7 @@ class SetrefData(generaldata.GeneralData):
     
     def _get_prop_alias(self):
         return self._x_prop_alias
+        
     def _set_prop_alias(self, val):
         self._x_prop_alias = val
         if self._setref:
@@ -88,14 +89,24 @@ class SetrefData(generaldata.GeneralData):
     
     def _get_setref_fname(self):
         self._make_setref_fname()
-        return self._setref_fname    
-    def _make_setref_fname(self):
+        return self._setref_fname
+        
+    def _make_setref_fname(self, type="output"):
         #use output directory
         #print "jd45:", self.filename, self.output_directory
         setrefn = "%s.setref" % os.path.basename(self.filename)
         self._setref_fname = os.path.join(
                                 self.output_directory, setrefn)
-        return self._setref_fname
+        
+        if type == "output":
+            return self._setref_fname
+        elif type == "input":
+            indir = os.path.dirname(self.filename)
+            setrefin = os.path.join(indir, setrefn)
+            print "sr106: indir",indir
+            print "sr107: setrefn", setrefn
+            print "sr108: setrefin", setrefin 
+            return setrefin
 
     setref_fname = property(_get_setref_fname)
     
@@ -194,18 +205,37 @@ class SetrefData(generaldata.GeneralData):
         return True # we just us the file stack  
                       
     def load_header(self):
+        """ By default, looks for a setref file in the current directory.
+        However, for some data, such as setref only, there might be a setref file
+        in the target directory.
+        @@REVIEW: is it safe, and if not can it be made safe, to use 
+        setref that are not in the same directory as the file being loaded
+        Ideas: 
+        () We could put setref files in the input directories as an ingestion step.  
+        () We can checksum, and put that in the set
+        
+        """
         # setref is all header
-        self._make_setref_fname()
-        if os.path.exists(self.setref_fname):
+        setrefout = self._make_setref_fname()
+        setrefin = self._make_setref_fname(type = "input")
+        print "sr218:\nout\t%s\nin\t%s" % (setrefout, setrefin)
+        in_setrefn = None
+        if os.path.exists(setrefin):
+            print "sr221: setrefin", in_setrefn
+            in_setrefn = setrefin
+        else:
+            print "sr224: setrefout", setrefout
+            in_setrefn = setrefout
+        if os.path.exists(in_setrefn):
             # print "jd57: load_header setref_fname = "+self.setref_fname
-            jsonfile = open(self.setref_fname)
+            jsonfile = open(in_setrefn)
             self._setref = json.load(jsonfile)
             jsonfile.close()
         else:
             self.put("filename", self.filename)
             self.put("setref_fname", self.setref_fname)
             
-    def load(self, initarg = None):
+    def load(self, initarg = None, force_load = False):
         self.load_header()
         pass
             
