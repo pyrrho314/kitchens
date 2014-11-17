@@ -103,9 +103,9 @@ class SetrefData(generaldata.GeneralData):
         elif type == "input":
             indir = os.path.dirname(self.filename)
             setrefin = os.path.join(indir, setrefn)
-            print "sr106: indir",indir
-            print "sr107: setrefn", setrefn
-            print "sr108: setrefin", setrefin 
+            # print "sr106: indir",indir
+            # print "sr107: setrefn", setrefn
+            # print "sr108: setrefin", setrefin 
             return setrefin
 
     setref_fname = property(_get_setref_fname)
@@ -218,13 +218,13 @@ class SetrefData(generaldata.GeneralData):
         # setref is all header
         setrefout = self._make_setref_fname()
         setrefin = self._make_setref_fname(type = "input")
-        print "sr218:\nout\t%s\nin\t%s" % (setrefout, setrefin)
+        # print "sr218:\nout\t%s\nin\t%s" % (setrefout, setrefin)
         in_setrefn = None
         if os.path.exists(setrefin):
-            print "sr221: setrefin", in_setrefn
+            # print "sr221: setrefin", in_setrefn
             in_setrefn = setrefin
         else:
-            print "sr224: setrefout", setrefout
+            # print "sr224: setrefout", setrefout
             in_setrefn = setrefout
         if os.path.exists(in_setrefn):
             # print "jd57: load_header setref_fname = "+self.setref_fname
