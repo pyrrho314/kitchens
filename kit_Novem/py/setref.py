@@ -30,6 +30,7 @@ class SetrefData(generaldata.GeneralData):
         # child defined
         self._setref = {}
         self._initialize_()
+        #  @@NOTE:@@TODO: remove this, extraneous reference 
         self.initarg = initarg
         self._accept_initarg(initarg)
         
@@ -258,7 +259,7 @@ class SetrefData(generaldata.GeneralData):
         datatypes  = "%s" % (tc.colored("data types:", attrs=["bold"]) + " %s" % repr(self.get_types()))
         reprstring = "%s" % (tc.colored("data_obj  :",attrs=["bold"])    + " %s" % repr(self))
         
-        retstr += "\n%s%s" % (ksutil.calc_fulltab(start_indent) , filename)
+        retstr += "%s%s" % (ksutil.calc_fulltab(start_indent) , filename)
         retstr += "\n%s%s" % (ksutil.calc_fulltab(start_indent) , datatypes)
         retstr += "\n%s%s" % (ksutil.calc_fulltab(start_indent) , reprstring)
         
