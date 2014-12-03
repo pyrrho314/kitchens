@@ -119,7 +119,7 @@ class SetRefPrimitives(PrimitiveSet):
             i += 1
             log.status(tc.colored("#%d"%i, "grey", "on_white"))
             log.status(tstr)
-            log.info(inp.pretty_setref())
+            log.debug(inp.pretty_setref())
         yield rc
         
     def writeAndDrop(self, rc):
