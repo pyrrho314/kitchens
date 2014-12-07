@@ -1,5 +1,5 @@
 from setref import SetrefData, ReferenceOnlyData
-
+import pandas as pd
 class PandasData(SetrefData):
     assumed_type = "TABLE"
     _dataframe = None
