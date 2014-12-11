@@ -257,7 +257,7 @@ class SetrefData(generaldata.GeneralData):
                                                                                    )
                                       
         datatypes  = "%s" % (tc.colored("data types:", attrs=["bold"]) + " %s" % repr(self.get_types()))
-        reprstring = "%s" % (tc.colored("data_obj  :",attrs=["bold"])    + " %s" % repr(self))
+        reprstring = "%s" % (tc.colored("data_obj  :", attrs=["bold"])    + " %s" % type(self))
         
         retstr += "%s%s" % (ksutil.calc_fulltab(start_indent) , filename)
         retstr += "\n%s%s" % (ksutil.calc_fulltab(start_indent) , datatypes)
