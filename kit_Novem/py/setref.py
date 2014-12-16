@@ -32,8 +32,9 @@ class SetrefData(generaldata.GeneralData):
         self._initialize_()
         #  @@NOTE:@@TODO: remove this, extraneous reference 
         self.initarg = initarg
+        #print "sr35:",initarg
         self._accept_initarg(initarg)
-        
+        #print "sr37:", self.filename
         if force_load:
             self.load()
         else:
@@ -71,7 +72,9 @@ class SetrefData(generaldata.GeneralData):
         keys = self._prop_alias.keys()
         retdict = {}
         for key in keys:
-            retdict[key] = self.meta(key)
+            hidden = self._prop_alias[key]["hidden"]
+            if not hidden:
+                retdict[key] = self.meta(key)
         if self._setref:
             self.put("_meta.summary", retdict);
         return retdict
@@ -94,8 +97,12 @@ class SetrefData(generaldata.GeneralData):
         
     def _make_setref_fname(self, type="output"):
         #use output directory
-        #print "jd45:", self.filename, self.output_directory
-        setrefn = "%s.setref" % os.path.basename(self.filename)
+        #print "sr97:", self.filename, self.output_directory
+        
+        if self.filename.endswith(".setref"):
+            setrefn = self.filename
+        else:
+            setrefn = "%s.setref" % os.path.basename(self.filename)
         self._setref_fname = os.path.join(
                                 self.output_directory, setrefn)
         
@@ -175,6 +182,7 @@ class SetrefData(generaldata.GeneralData):
                 1) -done-      
         """
         frev = 0;
+        print "sr185:",self.filename, os.path.exists(self.filename)
         if os.path.exists(self.filename):
             # break down filename
             flist = glob("_fs_versions/%s;*"%self.basename)
@@ -218,6 +226,7 @@ class SetrefData(generaldata.GeneralData):
         """
         # setref is all header
         setrefout = self._make_setref_fname()
+        #print "sr221:",setrefout
         setrefin = self._make_setref_fname(type = "input")
         # print "sr218:\nout\t%s\nin\t%s" % (setrefout, setrefin)
         in_setrefn = None
@@ -321,15 +330,26 @@ class SetrefData(generaldata.GeneralData):
             propname = key
         return self.get(propname, pytype = pytype)
         
-    def add_prop_alias(self, key, propname, pytype = None):
+    def add_prop_alias(self, key, propname, pytype = None, hidden=False):
+        """ hidden simply means don't return in .metadata property """
         # @@TODO: might want to ensure the alias isn't already defined
-        self._prop_alias[key] = {"addr":propname, "pytype" : pytype, "key":key}
+        self._prop_alias[key] = {"addr":propname, "pytype" : pytype, "key":key, "hidden":hidden}
     
     # this is for GeneralData which calls them with these names for subclass-specific property storage
     prop_get = get
     prop_put = put
     prop_add = add
-    
+class ReferenceCompleteData(SetrefData):
+    def do_write(self, *args, **argv):
+        super(ReferenceCompleteData, self).do_write(self, *args, **argv)
+        cwd = os.getcwd()
+        symname = os.path.relpath(self.filename)
+        targname = os.path.relpath(self.setref_fname)
+        print("sr348:", targname, symname)
+        os.symlink(targname, symname)
+        return True
+        
+        
 class ReferenceOnlyData(SetrefData):
     """ Sort of thought up as a generalization of the situation where
         I have a table that is not standard csv to parse.  We want to track it

@@ -13,19 +13,30 @@ class PandasData(SetrefData):
     #def load_header(self, initarg, **args):
     #    super(PandasData, self).load_header(self, initarg, **args)
     
-    def __init__(self, initarg, **argv):
+    def __init__(self, initarg = None, **argv):
+        if initarg == None:
+            self._initialize_()
+            if "columns" in argv:
+                self.dataframe = pd.DataFrame(argv["columns"])
+            else:
+                self.dataframe = pd.DataFrame()
+            self._loaded = True
+            self.filename = "unnamed.h5"
         if isinstance(initarg, list):
             self._initialize_()
             self.dataframe = pd.DataFrame(initarg)
             self._loaded = True
             self.filename = "unnamed.h5"
+        
         if isinstance(initarg, pd.DataFrame):
             self._initialize_()
             self.dataframe = initarg
             self._loaded = True 
             self.filename = "unnamed.h5"   
         else:
-            super(PandasData, self).__init__(initarg, **argv)
+            force_load = argv["force_load"] if "force_load" in argv else False
+            super(PandasData, self).__init__(initarg, force_load=force_load)
+            
     ## properties ##
     #
     def _get_dataframe(self):

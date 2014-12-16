@@ -204,7 +204,8 @@ class PartLocator():
                     val = self.pytype(val)
                 except:
                     # ok so we couldn't convert it
-                    pass
+                    #print "pl207: can't %s to %s for %s" % (val, self.pytype, self.propaddr)
+                    val = None
                     
                     
             return val
