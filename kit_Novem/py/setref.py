@@ -79,7 +79,7 @@ class SetrefData(generaldata.GeneralData):
             self.put("_meta.summary", retdict);
         return retdict
         
-    metadata = property(_get_metadata)
+    aliasdata = property(_get_metadata)
     
     def _get_prop_alias(self):
         return self._x_prop_alias
@@ -212,7 +212,18 @@ class SetrefData(generaldata.GeneralData):
     #################################
     def allow_extant_write(self):
         return True # we just us the file stack  
-                      
+    
+    
+    def fill_dict(self, tdict):
+        for key in tdict:
+            val = tdict[key]
+            if isinstance(val, basestring):
+                #print "sr222",val, self.meta(val)
+                tdict[key] = self.meta(val)
+            else:
+                self.fill_dict(val)
+        return tdict                  
+    
     def load_header(self):
         """ By default, looks for a setref file in the current directory.
         However, for some data, such as setref only, there might be a setref file
@@ -334,18 +345,20 @@ class SetrefData(generaldata.GeneralData):
         """ hidden simply means don't return in .metadata property """
         # @@TODO: might want to ensure the alias isn't already defined
         self._prop_alias[key] = {"addr":propname, "pytype" : pytype, "key":key, "hidden":hidden}
-    
+            
+     
     # this is for GeneralData which calls them with these names for subclass-specific property storage
     prop_get = get
     prop_put = put
     prop_add = add
+    
 class ReferenceCompleteData(SetrefData):
     def do_write(self, *args, **argv):
         super(ReferenceCompleteData, self).do_write(self, *args, **argv)
         cwd = os.getcwd()
         symname = os.path.relpath(self.filename)
         targname = os.path.relpath(self.setref_fname)
-        print("sr348:", targname, symname)
+        # print("sr348:", targname, symname)
         os.symlink(targname, symname)
         return True
         
