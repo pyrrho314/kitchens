@@ -36,6 +36,7 @@ class SetrefData(generaldata.GeneralData):
         self._accept_initarg(initarg)
         #print "sr37:", self.filename
         if force_load:
+            self.load_header()
             self.load()
         else:
             self.load_header()
@@ -249,15 +250,19 @@ class SetrefData(generaldata.GeneralData):
             in_setrefn = setrefout
         if os.path.exists(in_setrefn):
             # print "jd57: load_header setref_fname = "+self.setref_fname
-            jsonfile = open(in_setrefn)
-            self._setref = json.load(jsonfile)
-            jsonfile.close()
+            try:
+                jsonfile = open(in_setrefn)
+                self._setref = json.load(jsonfile)
+                jsonfile.close()
+            except:
+                print "sr258:", in_setrefn
+                raise
         else:
             self.put("filename", self.filename)
             self.put("setref_fname", self.setref_fname)
             
     def load(self, initarg = None, force_load = False):
-        self.load_header()
+        # self.load_header()
         pass
             
     def do_write(self, fname, rename = False):
