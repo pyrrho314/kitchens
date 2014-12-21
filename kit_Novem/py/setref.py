@@ -23,8 +23,8 @@ class SetrefData(generaldata.GeneralData):
     _setref_fname = None
     initarg = None
     _x_prop_alias = None
-    
-    def __init__(self, initarg, force_load = None):
+    _loaded_by = None
+    def __init__(self, initarg = None, force_load = None):
     
         super(SetrefData, self) .__init__( initarg)
         # child defined
@@ -60,9 +60,18 @@ class SetrefData(generaldata.GeneralData):
     def _accept_initarg(self, initarg):
         if isinstance(initarg, basestring):
             self.filename = initarg
+            self._loaded_by = "filename"
+        elif isinstance(initarg, dict):
+            if "filename" in initarg:
+                self.filename = initarg["filename"]
+            if "setref" in initarg:
+                self._setref = initarg["setref"]
+                self.filename = "hb_shape:%s" % self._setref["_id"]
+            self._loaded_by = "setref"
         else:
             if hasattr(initarg, "filename"):
                 self.filename = initarg.filename
+            self._loaded_by = self.filename
         # OPTIMIZEd: memory, keeps initializer around, could be other object!
         # REMOVED:self.initarg = initarg
     # metadata... just those with alias'
@@ -79,7 +88,8 @@ class SetrefData(generaldata.GeneralData):
         if self._setref:
             self.put("_meta.summary", retdict);
         return retdict
-        
+    
+    metadata  = property(_get_metadata)    
     aliasdata = property(_get_metadata)
     
     def _get_prop_alias(self):
@@ -183,7 +193,7 @@ class SetrefData(generaldata.GeneralData):
                 1) -done-      
         """
         frev = 0;
-        print "sr185:",self.filename, os.path.exists(self.filename)
+#        print "sr185:",self.filename, os.path.exists(self.filename)
         if os.path.exists(self.filename):
             # break down filename
             flist = glob("_fs_versions/%s;*"%self.basename)
@@ -237,6 +247,8 @@ class SetrefData(generaldata.GeneralData):
         
         """
         # setref is all header
+        if not self.filename:
+            return
         setrefout = self._make_setref_fname()
         #print "sr221:",setrefout
         setrefin = self._make_setref_fname(type = "input")
