@@ -90,8 +90,8 @@ class RecipeMagics(Magics):
         for key in tdirs:
             the_dirs[key] = tdirs[key] % os.environ
         self.ipython.push(the_dirs)
-        return ks.dict2pretty("adding variables to namespace", the_dirs)
-        
+        print ks.dict2pretty("adding variables to namespace", the_dirs)
+        return True
      
     @line_magic
     def sample_shape(self, line):
