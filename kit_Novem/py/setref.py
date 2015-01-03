@@ -281,6 +281,8 @@ class SetrefData(generaldata.GeneralData):
         self._push_file_stack()
         srfn = self.setref_fname # fname+".setref"
         srf = open(srfn, "w")
+        types = self.get_types()
+        self.put("_data.types", types)
         json.dump(self._setref, srf, sort_keys=True, indent =4)
         srf.close()
         pass
@@ -288,10 +290,11 @@ class SetrefData(generaldata.GeneralData):
     def pretty_string(self, start_indent = 0):
         retstr = ""
         
-        filename = "%s" % tc.colored("filename  :", attrs=["bold"]) + " %s/%s"  % (self.dirname,
-                                                                                    tc.colored( self.basename, 
-                                                                                                attrs=["bold"])
-                                                                                   )
+        filename = "%s" % tc.colored("filename  :", 
+                            attrs=["bold"]) + " %s/%s"  % (self.dirname,
+                                                            tc.colored( self.basename, 
+                                                                        attrs=["bold"])
+                                                           )
                                       
         datatypes  = "%s" % (tc.colored("data types:", attrs=["bold"]) + " %s" % repr(self.get_types()))
         reprstring = "%s" % (tc.colored("data_obj  :", attrs=["bold"])    + " %s" % type(self))

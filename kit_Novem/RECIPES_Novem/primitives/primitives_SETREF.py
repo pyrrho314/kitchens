@@ -93,6 +93,14 @@ class SetRefPrimitives(PrimitiveSet):
                 log.info("kept currentStorage for %s" % inp.filename)
         yield rc
            
+    def publish(self, rc):
+        """*publish* will move data from the output directory to persistent storage.
+        For setref this can be another disk, atm, but can be extended to be other stores.
+        """
+        #get all publishing objects in 
+        for inp in rc.get_inputs():
+            pass
+           
     def reduceToHeader(self, rc):
         inps = rc.get_inputs()
         for inp in inps:

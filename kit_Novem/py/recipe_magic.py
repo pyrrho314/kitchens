@@ -15,13 +15,15 @@ from astrodata.adutils import termcolor as tc
 from hbmdbstorage import MDBStorage
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--date", dest="date_range", default = "20140908")
-parser.add_argument("--phrase", dest = "phrase", default = "ndvistarprime")
+parser.add_argument("--date", dest="date_range", default = "*")
+parser.add_argument("--phrase", dest = "phrase", default = "*")
 parser.add_argument("--context", dest = "context" , default = None)
 parser.add_argument("--verbose", dest = "verbose", default = False, action="store_true")
 parser.add_argument("--index", dest = "index", default = 0)
 parser.add_argument("--subdir", dest = "subdir", default = None)
-
+parser.add_argument("--settype", dest = "settype", default = None) # requires opening all the files!
+parser.add_argument("--list", dest = "make_list", default = False, action= "store_true")
+parser.add_argument("--dir", dest = "dir", default = None);
 
       
 def load_ipython_extension(ipython):
@@ -131,7 +133,16 @@ class RecipeMagics(Magics):
         options = parser.parse_args(args = args)
         date_r = options.date_range
         phrase = options.phrase
+        verbose = options.verbose
         index = int(options.index)
+        settype = options.settype
+        make_list = options.make_list
+        directory = options.dir
+        
+        canddict = {}
+       
+        
+        # options.verbose used below
         print "Using date_range = %s and phrase = %s" % (date_r, phrase)
         
         dirs = self.get_config_paths()
@@ -146,17 +157,38 @@ class RecipeMagics(Magics):
         globpath = os.path.join(datadir, globpart)
         fils = glob.glob(globpath)
         if len(fils) == 0:
+            print tc.colored("globbed: %s" %globpath, "blue")
             print tc.colored("NO FILES MATCH", "red")
             return None
-        fil = fils[0]
+        
+        hbgeolist = []    
+        for fil in fils:
+            canddict[fil] = { "path": fil,
+                              "basename": os.path.basename(fil)
+                            }
+            if make_list:
+                hbgeolist.append(HBGeoTIFF(fil))
+                
+        if settype or verbose:
+            for fil in fils:
+                dat = HBGeoTIFF(fil)
+                canddict[fil]["types"] = dat.get_types()
+                dat = None
+        if verbose:
+            print ks.dict2pretty("found", [
+                                      { "name" :canddict[fil]["basename"],
+                                        "types":canddict[fil]["types"]
+                                      } for fil in fils])
+        
         print "found %d files, choosing image index = %d" % (len(fils), index)
         
-        if options.verbose:
-            print ks.dict2pretty("found", [os.path.basename(fil) for fil in fils])
+        fil = fils[index]
+        
         hbgeo = HBGeoTIFF(fil)
         ipython = self.ipython
         
         addn = {"hbgeo": hbgeo, "tiffname": fil}
+        addn["hbgeos"] = hbgeolist
         addnmsg = {"hbgeo":type(hbgeo), "tiffname": os.path.basename(fil)}
         print ks.dict2pretty("adding to namespace", addnmsg)
         ipython.push(addn)
