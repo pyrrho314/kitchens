@@ -146,6 +146,7 @@ class SetRefPrimitives(PrimitiveSet):
             suffix = None
             if rc["suffix"]:
                 suffix = "_%s"%suffix
+            inp.load()
             inp.write(suffix = suffix)
         yield rc
     writeOutput = writeOutputs    
