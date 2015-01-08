@@ -2,6 +2,7 @@ import getpass
 from astrodata import Lookups
 import os
 import shutil
+from copy import deepcopy, copy
 
 class FSPackage(object):
     setref = None
@@ -15,15 +16,36 @@ class FSPackage(object):
                                             "shelf_addresses", 
                                             "type_shelf_names",
                                             "type_store_precedence")
+        # basic elements like root
         self.warehouse_elements = info["warehouse_elements"]
+        # named storage templates
         self.shelf_addresses    = info["shelf_addresses"]
+        self._convert_shelf_addresses()
+        # shelf_addresses/names to use for a given type
         self.type_shelf_names   = info["type_shelf_names"]
+        # the order to check the types, so some types override others
+        # e.g. SETREF has a default storage location, a sort of misc. file
+        # that should be over written by other packages
         self.type_store_precedence    = info["type_store_precedence"]
         #print "fs20: ts_prec", self.type_store_precedence
         #print "fs21: sh_names", self.type_shelf_names
         if setref:
              self.elements_from_setref(setref)   
              #self.get_storename()
+    
+    def _convert_shelf_addresses(self):
+        """The purpose is to change addresses that are strings into
+            the dict version used by the class."""
+        import re
+        for key in self.shelf_addresses:
+            addrobj = self.shelf_addresses[key]
+            if isinstance(addrobj, basestring):
+                addrdict = {"path_templ":addrobj}
+                m = re.findall("\{(.*?)\}", addrobj)
+                addrdict["requires"] = m
+                print "fs46:",m
+                self.shelf_addresses[key] = addrdict
+                     
              
     def elements_from_setref(self, setref):
         self.setref = setref
@@ -74,9 +96,8 @@ class FSPackage(object):
         return fullpath
     
     def get_store_dirname(self, setref = None):
-        if not setref:
-            setref = self.setref
-        self.elements_from_setref(setref)
+        if setref:
+            self.elements_from_setref(setref)
         settype = self.elements["type"]
         if settype in self.type_shelf_names:
             shelfname = self.type_shelf_names[settype]
@@ -85,12 +106,57 @@ class FSPackage(object):
             storepath = self.format_storage_location(shelfname)
         self.store_dirname = storepath
         return storepath
+    
+    def get_store_prefix(self, elements = None):
+        if not elements:
+            elements = self.elements
+        whelem = deepcopy(self.warehouse_elements)
+        whelem.update(elements)
+        
+        shelf_name = (  whelem["shelf_name"] 
+                            if "shelf_name" in elements 
+                            else "processed_data"
+                     )
+        
+        template_dsc = self.shelf_addresses[shelf_name]
+        req = template_dsc["requires"]
+        for elem in req:
+            #print "fs103: elem", elem
+            if elem not in whelem:
+                whelem[elem] = "\n{%s}\n" % elem
+        temp = template_dsc["path_templ"]
+        #print "fs107:", whelem
+        pfx_ml = temp.format(**whelem)
+        pfx = pfx_ml.split()[0]
+        if pfx[-1] == os.sep:
+            pfx = pfx[:-1]
+            
+        return pfx
         
     def get_store_path(self, setref = None):
         storepath = self.get_store_dirname(setref)
         storename = os.path.join(storepath, setref.basename)
         self.storename = storename
         return storename
+    
+    def get_store_list(self, prefix = None, elements = None):
+        if not prefix:
+            prefix = self.get_store_prefix(elements)
+        #print "fs121: prefix = %s" % prefix
+        if prefix[0] == os.sep:
+            prefix = prefix[1:]
+        lcurse = self.bucket.list(prefix = prefix ) # , delimiter = "/")
+        l = []
+        for i in lcurse:
+            if "phrase" in elements:
+                phrase = elements["phrase"]
+                if phrase in i.name:
+                    l.append(i.name)
+            else:
+                l.append(i.name)
+        return l
+        
+            
         
     def transport_to_warehouse(self):
         workpath = self.setref.filename
@@ -111,7 +177,7 @@ class FSPackage(object):
             shutil.move(sr_workpath, sr_storepath)
         return True 
         
-    def transport_from_warehouse(self):
+    def deliver_from_warehouse(self):
         # doesn't do anything
         pass
         
