@@ -1,6 +1,7 @@
 import getpass
 from astrodata import Lookups
 import os
+import re
 import shutil
 from copy import deepcopy, copy
 
@@ -9,8 +10,9 @@ class FSPackage(object):
     storename = None
     elements = {}
    
-    def __init__(self, setref = None):
+    def __init__(self, setref = None, storename = None):
         self.elements["user"] = getpass.getuser()
+        self.storename = storename
         info = Lookups.compose_multi_table( "*/warehouse_settings", 
                                             "warehouse_elements", 
                                             "shelf_addresses", 
@@ -39,12 +41,17 @@ class FSPackage(object):
         import re
         for key in self.shelf_addresses:
             addrobj = self.shelf_addresses[key]
+            
             if isinstance(addrobj, basestring):
                 addrdict = {"path_templ":addrobj}
-                m = re.findall("\{(.*?)\}", addrobj)
+            else:
+                addrdict = addrobj
+            if "requires" not in addrdict:
+                stempl = addrdict["path_templ"]
+                m = re.findall("\{(.*?)\}", stempl)
                 addrdict["requires"] = m
-                print "fs46:",m
-                self.shelf_addresses[key] = addrdict
+            
+            self.shelf_addresses[key] = addrdict
                      
              
     def elements_from_setref(self, setref):
@@ -132,6 +139,12 @@ class FSPackage(object):
             pfx = pfx[:-1]
             
         return pfx
+    def get_store_sidecars(self, elements = None):
+        template_dsc = self.get_ware_spec(elements = elements)
+        if "sidecar_templs" in template_dsc:
+            return template_dsc["sidecar_templs"]
+        return None
+        
         
     def get_store_path(self, setref = None):
         storepath = self.get_store_dirname(setref)
@@ -154,9 +167,31 @@ class FSPackage(object):
                     l.append(i.name)
             else:
                 l.append(i.name)
+                
+        scelems = self.get_store_sidecars(elements)
+        if scelems:
+            newl = []
+            for item in l:
+                for sc in scelems:
+                    #if item.endswith(sc):
+                    if re.match(sc, item):
+                        newl.append(item)
+                        break;
+            l = newl
         return l
         
-            
+    def get_ware_spec(self, elements = None):
+        if not elements:
+            elements = self.elements
+        whelem = deepcopy(self.warehouse_elements)
+        whelem.update(elements)
+        
+        shelf_name = (  whelem["shelf_name"] 
+                            if "shelf_name" in elements 
+                            else "processed_data"
+                     )      
+        template_dsc = self.shelf_addresses[shelf_name]
+        return template_dsc
         
     def transport_to_warehouse(self):
         workpath = self.setref.filename
