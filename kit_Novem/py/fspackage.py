@@ -80,6 +80,7 @@ class FSPackage(object):
             settype = "&".join(srtypes)
         #print "fs48: settype",settype
         self.elements["type"] = settype
+        self.elements["region"] = setref.meta("region")
 
     def format_storage_location(self, shelfname, elements = {}):
         fargs = self.elements
