@@ -139,7 +139,7 @@ class FSPackage(object):
         template_dsc = self.shelf_addresses[shelf_name]
         req = template_dsc["requires"]
         for elem in req:
-            print "fs103: elem", elem
+            #print "fs143: elem", elem
             if elem not in whelem:
                 whelem[elem] = "\n{%s}\n" % elem
         temp = template_dsc["path_templ"]
