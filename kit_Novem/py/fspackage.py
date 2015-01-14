@@ -5,6 +5,16 @@ import re
 import shutil
 from copy import deepcopy, copy
 
+def recursive_listdir(dirname = "."):
+    rfilelist = []
+    print "fs10:", dirname
+    for root, dirs, files in os.walk(dirname):
+        #print root, len(dirs), len(files)
+        for fil in files:
+            fpath = os.path.join(root, fil)
+            rfilelist.append(fpath)
+    return rfilelist
+
 class FSPackage(object):
     setref = None
     storename = None
@@ -129,7 +139,7 @@ class FSPackage(object):
         template_dsc = self.shelf_addresses[shelf_name]
         req = template_dsc["requires"]
         for elem in req:
-            #print "fs103: elem", elem
+            print "fs103: elem", elem
             if elem not in whelem:
                 whelem[elem] = "\n{%s}\n" % elem
         temp = template_dsc["path_templ"]
@@ -156,18 +166,18 @@ class FSPackage(object):
     def get_store_list(self, prefix = None, elements = None):
         if not prefix:
             prefix = self.get_store_prefix(elements)
-        #print "fs121: prefix = %s" % prefix
-        if prefix[0] == os.sep:
-            prefix = prefix[1:]
-        lcurse = self.bucket.list(prefix = prefix ) # , delimiter = "/")
+        print "fs121: prefix = %s" % prefix
+        
+        lcurse = recursive_listdir( prefix )
+        
         l = []
-        for i in lcurse:
+        for fnam in lcurse:
             if "phrase" in elements:
                 phrase = elements["phrase"]
-                if phrase in i.name:
-                    l.append(i.name)
+                if phrase in fnam:
+                    l.append(fnam)
             else:
-                l.append(i.name)
+                l.append(fnam)
                 
         scelems = self.get_store_sidecars(elements)
         if scelems:
@@ -214,6 +224,19 @@ class FSPackage(object):
         return True 
         
     def deliver_from_warehouse(self):
-        # doesn't do anything
-        pass
+        curdir = os.getcwd()
+        print "bp52:", self.storename
+        basename = os.path.basename(self.storename)
+        # raw_data_legacy heuristic
+        if "Northern_AOI" in self.storename:
+            basename = "NPH-%s" % basename
+        if "Southern_AOI" in self.storename:
+            basename = "SPH-%s" % basename
+        localpath = os.path.join(curdir, basename)
+        self.local_path = localpath
+        
+        shutil.copyfile(self.storename, self.local_path)
+        
+        return True
+        
         
