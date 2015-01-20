@@ -244,7 +244,6 @@ class SetrefData(generaldata.GeneralData):
         Ideas: 
         () We could put setref files in the input directories as an ingestion step.  
         () We can checksum, and put that in the set
-        
         """
         # setref is all header
         if not self.filename:
@@ -267,7 +266,7 @@ class SetrefData(generaldata.GeneralData):
                 self._setref = json.load(jsonfile)
                 jsonfile.close()
             except:
-                print "sr258:", in_setrefn
+                print "sr258:MALFORMED SETREF:", in_setrefn
                 raise
         else:
             self.put("filename", self.filename)
