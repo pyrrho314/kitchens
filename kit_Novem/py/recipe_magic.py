@@ -24,7 +24,7 @@ parser.add_argument("--subdir", dest = "subdir", default = None)
 parser.add_argument("--settype", dest = "settype", default = None) # requires opening all the files!
 parser.add_argument("--list", dest = "make_list", default = False, action= "store_true")
 parser.add_argument("--dir", dest = "dir", default = None);
-
+parser.add_argument("--cwd", dest = "cwd", default = False, action="store_true")
       
 def load_ipython_extension(ipython):
     # The `ipython` argument is the currently active `InteractiveShell`
@@ -145,13 +145,18 @@ class RecipeMagics(Magics):
         # options.verbose used below
         print "Using date_range = %s and phrase = %s" % (date_r, phrase)
         
-        dirs = self.get_config_paths()
         globpart = ("*%(datestr)s*%(phrase)s*.tif" %
                         { "datestr":date_r, # can't be range atm
                             "phrase":phrase
                         }
                     )
-        datadir = dirs["processed_data"]% os.environ
+        if not options.cwd:
+            dirs = self.get_config_paths()
+            
+            datadir = dirs["processed_data"]% os.environ
+        else:
+            datadir = os.path.abspath(os.curdir)
+        print "Data Directory: %s" % datadir
         if options.subdir:
             datadir = os.path.join(datadir, options.subdir)
         globpath = os.path.join(datadir, globpart)

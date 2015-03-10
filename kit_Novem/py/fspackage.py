@@ -204,7 +204,7 @@ class FSPackage(object):
         template_dsc = self.shelf_addresses[shelf_name]
         return template_dsc
         
-    def transport_to_warehouse(self):
+    def transport_to_warehouse(self, remove_local=False):
         workpath = self.setref.filename
         storedir = self.get_store_dirname()
         storepath    = os.path.join(storedir, self.setref.basename)
@@ -214,13 +214,21 @@ class FSPackage(object):
         if not os.path.exists(storedir):
             os.makedirs(storedir)
         
+        # COPY MAIN FILE
         # copy workfile to store    
         if os.path.exists(workpath):
-            shutil.move(workpath, storepath)
+            if remove_local:
+                shutil.move(workpath, storepath)
+            else:
+                shutil.copyfile(workpath, storepath)
         sr_workpath = self.setref._make_setref_fname(type="input")
+        # COPY SETREF SIDECAR FILE
         # copy setref to store
         if os.path.exists(sr_workpath):
-            shutil.move(sr_workpath, sr_storepath)
+            if remove_local:
+                shutil.move(sr_workpath, sr_storepath)
+            else:
+                shutil.copyfile(sr_workpath, sr_storepath)
         return True 
         
     def deliver_from_warehouse(self):
