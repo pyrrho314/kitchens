@@ -64,6 +64,15 @@ class SetRefPrimitives(PrimitiveSet):
         code.interact(local=locals())
         yield rc
     
+    def ingest(self, rc):
+        rc.run("markAsIngested");
+        yield rc
+        for inp in rc.get_inputs():
+            inp.load()
+            rc.report_output(inp)
+            yield rc
+        yield rc
+        
     def parseAsSpecial(self, rc):
         yield rc
     

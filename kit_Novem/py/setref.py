@@ -66,7 +66,7 @@ class SetrefData(generaldata.GeneralData):
                 self.filename = initarg["filename"]
             if "setref" in initarg:
                 self._setref = initarg["setref"]
-                self.filename = "hb_shape:%s" % self._setref["_id"]
+                #self.filename = "hb_shape:%s" % self._setref["_id"]
             self._loaded_by = "setref"
         else:
             if hasattr(initarg, "filename"):
@@ -360,12 +360,34 @@ class SetrefData(generaldata.GeneralData):
             propname = key
         return self.get(propname, pytype = pytype)
         
-    def add_prop_alias(self, key, propname, pytype = None, hidden=False):
-        """ hidden simply means don't return in .metadata property """
-        # @@TODO: might want to ensure the alias isn't already defined
-        self._prop_alias[key] = {"addr":propname, "pytype" : pytype, "key":key, "hidden":hidden}
-            
-     
+           
+    # other members
+    def use_storage(self, storetype = None):
+        # I prefer hdf5 at the moment
+        name, ext = os.path.splitext(self.filename)
+        if storetype in self._supported_storage:
+            newfilename = self._supported_storage[storetype] % {"basename":name}
+        if newfilename == self.filename:
+            return False # no change needed
+        else:    
+            oldfilename = self.filename
+            self.filename = newfilename
+            self.put("filename",self.filename)   
+            self.add("history.previous_filenames", oldfilename)
+            return True # ok, changed 
+    
+    def add_setref_method(methodname, propname, pytype = None, hidden = False):
+        from types import MethodType
+        
+        cls_patch = """
+                    def _get_{propname}(self, pytype={pytype}, hidden={hidden}):
+                        return self.get("{propname}")
+                    self._get_{methodname} = MethodType(self, _get_{propname})
+                    def _set_{propname}(self, value):
+                        return self.put("{propname}", value)
+                    self._set_{methodname} = MethodType(self, _set_{propname}
+                    
+                    """
     # this is for GeneralData which calls them with these names for subclass-specific property storage
     prop_get = get
     prop_put = put

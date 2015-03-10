@@ -143,19 +143,7 @@ class PandasData(SetrefData):
         self.use_storage("h5")
     native_storage = nativeStorage
     
-    def use_storage(self, storetype = None):
-        # I prefer hdf5 at the moment
-        name, ext = os.path.splitext(self.filename)
-        if storetype in self._supported_storage:
-            newfilename = self._supported_storage[storetype] % {"basename":name}
-        if newfilename == self.filename:
-            return False # no change needed
-        else:    
-            oldfilename = self.filename
-            self.filename = newfilename
-            self.put("filename",self.filename)   
-            self.add("history.previous_filenames", oldfilename)
-            return True # ok, changed
+    
     
     def supports_storage(self, storage):
         return storage in self._supported_storage
