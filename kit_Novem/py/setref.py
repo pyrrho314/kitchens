@@ -1,4 +1,3 @@
-
 import sys,os
 import json
 import pprint
@@ -40,8 +39,10 @@ class SetrefData(generaldata.GeneralData):
             self.load()
         else:
             self.load_header()
-        
-            
+
+    ### Private Functions Section ##
+    #
+
     def _initialize_(self):
         if not self._setref:
             self._setref = {}
@@ -128,9 +129,7 @@ class SetrefData(generaldata.GeneralData):
             return setrefin
 
     setref_fname = property(_get_setref_fname)
-    
-    ### Private Functions Section ##
-    #
+
     # file stack
     def _getref(self, keystring, put = False, pytype = str, struct = None):
         d = None
@@ -150,33 +149,7 @@ class SetrefData(generaldata.GeneralData):
         ref = loc.get_reference()
         #print "sr87:", ref, 
         return ref
-        
-        
-        
-    def _OLD_getref(self, keystring, put=False, struct = None):
-        import re
-        d = None
-        if struct:
-            d = struct
-        else:
-            d = self._setref
-        keys = keystring.split(".")
-        
-        t = d
-        allbutlast = keys[:-1]
-        if len(allbutlast):
-            for key in allbutlast:
-                if not put and not key in t:
-                    return (None, None)
-                if not key in t:
-                    t[key] = {}
-                t = t[key]
-        else:
-            key = keys[-1]
-            if not put and not key in t:
-                return (None, None)
-        return t, keys[-1]
-        
+
     def _push_file_stack(self):
         """ 
         1) check if filename exists
@@ -218,13 +191,18 @@ class SetrefData(generaldata.GeneralData):
                 movesetref_fname = os.path.join(movepath, movesetref_basename)
                 
                 shutil.move(self.setref_fname, movesetref_fname) 
-    #       
+
+    #
     # private functions section (end)
     #################################
+
     def allow_extant_write(self):
-        return True # we just us the file stack  
-    
-    
+        return True # we just use the file stack  
+
+    def get_setref_copy(self):
+        srcopy = deepcopy(self._setref)
+        return srcopy
+
     def fill_dict(self, tdict):
         for key in tdict:
             val = tdict[key]
@@ -388,6 +366,12 @@ class SetrefData(generaldata.GeneralData):
                     self._set_{methodname} = MethodType(self, _set_{propname}
                     
                     """
+                    
+    def add_prop_alias(self, key, propname, pytype = None, hidden=False):
+        """ hidden simply means don't return in .metadata property """
+        # @@TODO: might want to ensure the alias isn't already defined
+        self._prop_alias[key] = {"addr":propname, "pytype" : pytype, "key":key, "hidden":hidden}
+    
     # this is for GeneralData which calls them with these names for subclass-specific property storage
     prop_get = get
     prop_put = put
