@@ -15,6 +15,93 @@ class SetrefError(Error):
     message = "Set Reference Data Object Error"
 
 class SetrefData(generaldata.GeneralData):
+    """
+    The SetrefData class is meant to be used as a parent class, though it can be
+    used directly with json data, for data meant to be handled by the 
+    "primitives".
+
+    Design:
+
+        The SetrefData class descends from astrodta.generaldata.GeneralData.
+    These classes integrate the datatype to the basic requirements of
+    the recipe system, and try to perfom the regular sequences of loading,
+    writing, and metadata access by calling method members which are meant
+    to be implemented by the child class and called at the correct moment,
+    something like a callback, or a virtual functions.
+
+    Features:
+    
+        Loading Semantics:
+            SetrefData loads data using the initarg to the constructor,
+            So that children have a chance to partake in loading from
+            a given type of initarg, SetrefData will call 
+            `self._accept_initarg_(..)`. Further loading of metadata
+            or "header" information is considered separate from loading
+            target data, to facilitate large data sets in cases where
+            only metadata is required.
+        Writing Semantics:
+            When writing, SetrefData takes some steps to prevent accidentally
+            overwritting extant data. The recipe system is prone to this
+            insofar as running the same recipe twice will produce identically
+            named files though parameters to the recipe may have changed the
+            output.  Given the purpose is automation it's desired to be able
+            to recover and detect such situations. GeneralData allows a
+            child class to implement an "extant overwrite" functionality which
+            SetrefData implements. The writing semantics are controlled in
+            GeneralData.write(..) which will call the childs do_write(..)
+            function to do the actual writing. SetrefData performs two
+            services, firstly, it will handle writing the metadata to
+            filename.ext.setref, and two, it will check to see if files
+            of the output names already exist, and if they do, will push
+            them in a datastack, in a subdirectory, suffixes with ";N" where
+            "N" is a unique, increasing, integer.  The child class doesn't
+            partake in this safety measure, and when it's implementation of
+            "do_write" executes, it can assume a clean disk. Note, it
+            must call super(self.__class__, self).do_write() BEFORE
+            writing. Additionally, GeneralData itself uses some overrideable
+            members to keep track of if datasets need writing eventually,
+            i.e. at the end of the recipe, or if they are unchanged since
+            loading or have not changed since the last writing. The user
+            must cooperate by calling `needs_write()`, unless the child
+            type specifically detects changes, e.g. by intercepting
+            property puts, and relevant _accept_initarg_ initializations.
+        Properties:
+            SetrefData handles properties in a general way which makes 
+            them distinct from object members, which can sometimes be thought
+            of as properties.  In this case we are talking about "Set Reference"
+            properties, those which will go in the ".setref" file and which are
+            thus the persistent part of the metadata, especialy any metadata
+            which cannot be recovered from target datasets, which was added
+            for example, by the system to track data semantics.
+            The goal is to be able to fluidly store these properties on disk,
+            in mongo, and send them to javascript where they may be stored in
+            IndexedDB. Property values should therefore be json and/or mongo
+            serializable. The primary issue here is, use basic python types,
+            dictionary, list, integer, floating point, and strings. Additonally,
+            python datetime can be used with mongo, but when stored on disk 
+            this and any other datatype not json serializable will be converted
+            to string. This can be dealt with in a client `load(..)` or 
+            `load_header(..)` function, or `_accept_initarg(..)` function,
+            which could convert the datetime strings. In this case both 
+            python and mongo ISODate formats should be taken into account.
+            
+            In memory, all the Set Reference Properties are stored in the
+            `_setref` nested dictionary.  Since the dictionary is nested
+            and can be quite deep, complicated, and so on, SetrefData 
+            sports member functions put, get, and add, which accept
+            keys in the style of javascript syntax, and on puts where the
+            intervening dictionaries and lists do not exist, these
+            intervening structures will be created. 
+        Cooperation with the type system:
+            GeneralData allows it's children to define their own property
+            functions, and SetrefData uses this _setref properties. This 
+            in turn allows GeneralDataClassifications to probe the metadata they
+            otherwise do not understand, since the specific child type
+            will have populated the initial properties of the dataset reference
+            by the time type checking is done. 
+            
+    """
+    
     
     _setref = None
     data_object = None
@@ -24,6 +111,8 @@ class SetrefData(generaldata.GeneralData):
     _x_prop_alias = None
     _loaded_by = None
     def __init__(self, initarg = None, force_load = None):
+        """
+        """
     
         super(SetrefData, self) .__init__( initarg)
         # child defined
@@ -260,7 +349,9 @@ class SetrefData(generaldata.GeneralData):
         srf = open(srfn, "w")
         types = self.get_types()
         self.put("_data.types", types)
-        json.dump(self._setref, srf, sort_keys=True, indent =4)
+        def fval(obj):
+            return str(obj)
+        json.dump(self._setref, srf, sort_keys=True, indent =4, default=fval)
         srf.close()
         pass
         
@@ -318,7 +409,8 @@ class SetrefData(generaldata.GeneralData):
         if t:
             return True
         else:
-            return False           
+            return False  
+            
     def put(self, keystring, val, pytype = None):
         loc = PartLocator(keystring, self._setref, pytype = pytype)
         #print "sr put 261:", keystring, pytype

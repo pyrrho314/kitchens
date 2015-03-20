@@ -225,3 +225,12 @@ class PartLocator():
             return self.parts[nindex]
 
     
+def get_property(s, key):
+    pl = PartLocator(key, s, pytype = None)
+    return pl.property_value()
+
+def set_property(s, key, val):
+    pl = PartLocator(key, s, pytype = None)
+    pl.create_location()
+    pl.property_value(val)
+    
