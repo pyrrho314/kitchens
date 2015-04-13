@@ -2,6 +2,7 @@ import sys,os
 import json
 import pprint
 from astrodata.adutils import ksutil
+from astrodata.adutils import ksutil as ks
 from astrodata import generaldata
 from copy import copy, deepcopy
 from glob import glob
@@ -93,8 +94,8 @@ class SetrefData(generaldata.GeneralData):
             intervening dictionaries and lists do not exist, these
             intervening structures will be created. 
         Cooperation with the type system:
-            GeneralData allows it's children to define their own property
-            functions, and SetrefData uses this _setref properties. This 
+            GeneralData allows its children to define their own "property"
+            get and set functions, and SetrefData uses this _setref properties. This 
             in turn allows GeneralDataClassifications to probe the metadata they
             otherwise do not understand, since the specific child type
             will have populated the initial properties of the dataset reference
@@ -110,6 +111,30 @@ class SetrefData(generaldata.GeneralData):
     initarg = None
     _x_prop_alias = None
     _loaded_by = None
+    _typepre  = "unkn"
+    _typepost = "xdt"
+    ### properties
+    ###
+    _filename = None
+    
+    def build_filename (self):
+        """Used to build a standard filename based on ._id"""
+        sid = self.get("_id")
+        print sid
+        if not sid:
+            sid = ks.rand_file_id()
+        fname = "%s-%s.%s" % (self._typepre, sid, self._typepost)
+        return fname        
+    def get_filename(self):
+        if not self._filename:
+            self._filename = self.build_filename()
+        return self._filename
+    def set_filename(self, fin):
+        self._filename = fin
+        self.put("filename", fin)
+        
+    filename = property(get_filename, set_filename)    
+    
     def __init__(self, initarg = None, force_load = None):
         """
         """
@@ -129,6 +154,17 @@ class SetrefData(generaldata.GeneralData):
         else:
             self.load_header()
 
+    ### Properties Section ###
+    #
+    def get_field_id(self):
+        return self.get("_id")
+    
+    def set_field_id(self, sID):
+        self.put("_id", sID)
+        
+    _id = property(get_field_id, set_field_id)
+    
+    #
     ### Private Functions Section ##
     #
 
@@ -148,6 +184,7 @@ class SetrefData(generaldata.GeneralData):
         return rstr
         
     def _accept_initarg(self, initarg):
+        print "sr187: initarg", initarg
         if isinstance(initarg, basestring):
             self.filename = initarg
             self._loaded_by = "filename"
@@ -315,19 +352,20 @@ class SetrefData(generaldata.GeneralData):
         # setref is all header
         if not self.filename:
             return
+        print "sr354: filename", self.filename
         setrefout = self._make_setref_fname()
         #print "sr221:",setrefout
         setrefin = self._make_setref_fname(type = "input")
-        # print "sr218:\nout\t%s\nin\t%s" % (setrefout, setrefin)
+        print "sr357:\nout\t%s\nin\t%s" % (setrefout, setrefin)
         in_setrefn = None
         if os.path.exists(setrefin):
-            # print "sr221: setrefin", in_setrefn
+            print "sr360: setrefin", setrefin
             in_setrefn = setrefin
         else:
-            # print "sr224: setrefout", setrefout
+            print "sr363: setrefout", setrefout
             in_setrefn = setrefout
         if os.path.exists(in_setrefn):
-            # print "jd57: load_header setref_fname = "+self.setref_fname
+            print "sr366: load_header setref_fname = "+self.setref_fname
             try:
                 jsonfile = open(in_setrefn)
                 self._setref = json.load(jsonfile)
@@ -340,6 +378,7 @@ class SetrefData(generaldata.GeneralData):
             self.put("setref_fname", self.setref_fname)
             
     def load(self, initarg = None, force_load = False):
+        print "sr379: load do nothin"
         # self.load_header()
         pass
             
