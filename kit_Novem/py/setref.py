@@ -12,6 +12,8 @@ from astrodata.adutils import termcolor as tc
 from astrodata.Errors import Error
 from partlocator import PartLocator
 
+DEBUG = False
+
 class SetrefError(Error):
     message = "Set Reference Data Object Error"
 
@@ -184,7 +186,7 @@ class SetrefData(generaldata.GeneralData):
         return rstr
         
     def _accept_initarg(self, initarg):
-        print "sr187: initarg", initarg
+        #print "sr187: initarg", initarg
         if isinstance(initarg, basestring):
             self.filename = initarg
             self._loaded_by = "filename"
@@ -352,20 +354,26 @@ class SetrefData(generaldata.GeneralData):
         # setref is all header
         if not self.filename:
             return
-        print "sr354: filename", self.filename
+        if DEBUG:
+            print "sr354: filename", self.filename
         setrefout = self._make_setref_fname()
-        #print "sr221:",setrefout
+        if DEBUG:
+            print "sr221:",setrefout
         setrefin = self._make_setref_fname(type = "input")
-        print "sr357:\nout\t%s\nin\t%s" % (setrefout, setrefin)
+        if DEBUG:
+            print "sr357:\nout\t%s\nin\t%s" % (setrefout, setrefin)
         in_setrefn = None
         if os.path.exists(setrefin):
-            print "sr360: setrefin", setrefin
+            if DEBUG:
+                print "sr360: setrefin", setrefin
             in_setrefn = setrefin
         else:
-            print "sr363: setrefout", setrefout
+            if DEBUG:
+                print "sr363: setrefout", setrefout
             in_setrefn = setrefout
         if os.path.exists(in_setrefn):
-            print "sr366: load_header setref_fname = "+self.setref_fname
+            if DEBUG:
+                print "sr366: load_header setref_fname = "+self.setref_fname
             try:
                 jsonfile = open(in_setrefn)
                 self._setref = json.load(jsonfile)
@@ -378,7 +386,8 @@ class SetrefData(generaldata.GeneralData):
             self.put("setref_fname", self.setref_fname)
             
     def load(self, initarg = None, force_load = False):
-        print "sr379: load do nothin"
+        if DEBUG:
+            print "sr379: load doing nothing"
         # self.load_header()
         pass
             
