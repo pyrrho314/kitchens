@@ -122,7 +122,6 @@ class SetrefData(generaldata.GeneralData):
     def build_filename (self):
         """Used to build a standard filename based on ._id"""
         sid = self.get("_id")
-        print sid
         if not sid:
             sid = ks.rand_file_id()
         fname = "%s-%s.%s" % (self._typepre, sid, self._typepost)

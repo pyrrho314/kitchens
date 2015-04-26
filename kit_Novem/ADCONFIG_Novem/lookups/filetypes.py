@@ -4,7 +4,6 @@ data_object_classes = {
     "xls": ("pandasdata", "PandasData"),
     "csv": ("pandasdata", "PandasData"),
     "h5": ("pandasdata", "PandasData"),
-    "shp": ("hbshapedata", "HBShapeData"),
     "setref": ("jsondata", "ReferenceOnlyData"),
     "dmo": ("cubedata", "CubeDemoData"),
     "dmobson":("cubedata", "CubeDemoData")
