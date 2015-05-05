@@ -12,7 +12,7 @@ from astrodata.adutils import termcolor as tc
 from astrodata.Errors import Error
 from partlocator import PartLocator
 
-DEBUG = True
+DEBUG = False
 
 class SetrefError(Error):
     message = "Set Reference Data Object Error"
