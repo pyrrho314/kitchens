@@ -12,7 +12,7 @@ from astrodata.adutils import termcolor as tc
 from astrodata.Errors import Error
 from partlocator import PartLocator
 
-DEBUG = False
+DEBUG = True
 
 class SetrefError(Error):
     message = "Set Reference Data Object Error"
@@ -121,6 +121,7 @@ class SetrefData(generaldata.GeneralData):
     
     def build_filename (self):
         """Used to build a standard filename based on ._id"""
+        sid = None
         sid = self.get("_id")
         if not sid:
             sid = ks.rand_file_id()
@@ -133,6 +134,7 @@ class SetrefData(generaldata.GeneralData):
     def set_filename(self, fin):
         self._filename = fin
         self.put("filename", fin)
+        self.put("setref_fname", self.setref_fname)
         
     filename = property(get_filename, set_filename)    
     
@@ -157,13 +159,13 @@ class SetrefData(generaldata.GeneralData):
 
     ### Properties Section ###
     #
-    def get_field_id(self):
+    def get_doc_id(self):
         return self.get("_id")
     
-    def set_field_id(self, sID):
+    def set_doc_id(self, sID):
         self.put("_id", sID)
         
-    _id = property(get_field_id, set_field_id)
+    _id = property(get_doc_id, set_doc_id)
     
     #
     ### Private Functions Section ##
