@@ -127,14 +127,19 @@ class SetrefData(generaldata.GeneralData):
             sid = ks.rand_file_id()
         fname = "%s-%s.%s" % (self._typepre, sid, self._typepost)
         return fname        
+        
     def get_filename(self):
         if not self._filename:
             self._filename = self.build_filename()
         return self._filename
+        
     def set_filename(self, fin):
         self._filename = fin
-        self.put("filename", fin)
-        self.put("setref_fname", self.setref_fname)
+        #@@WAREHOUSE RELATED CLEANUP
+        #self.put("filename", fin)
+        #self.put("setref_fname", self.setref_fname)
+        self.put("_data.filename", fin)
+        self.put("_data.setref_fname", self.setref_fname)
         
     filename = property(get_filename, set_filename)    
     
@@ -383,14 +388,14 @@ class SetrefData(generaldata.GeneralData):
                 print "sr258:MALFORMED SETREF:", in_setrefn
                 raise
         else:
-            self.put("filename", self.filename)
-            self.put("setref_fname", self.setref_fname)
+            self.put("_data.filename", self.filename)
+            self.put("_data.setref_fname", self.setref_fname)
             
     def load(self, initarg = None, force_load = False):
         if DEBUG:
             print "sr379: load doing nothing"
         # self.load_header()
-        pass
+        
             
     def do_write(self, fname, rename = False):
         self._push_file_stack()
@@ -402,7 +407,18 @@ class SetrefData(generaldata.GeneralData):
             return str(obj)
         json.dump(self._setref, srf, sort_keys=True, indent =4, default=fval)
         srf.close()
-        pass
+        
+    def do_write_header(self):
+        """Used to write only the .setref/header.
+        """
+        srfn = self.setref_fname # fname+".setref"
+        srf = open(srfn, "w")
+        types = self.get_types()
+        self.put("_data.types", types)
+        def fval(obj):
+            return str(obj)
+        json.dump(self._setref, srf, sort_keys=True, indent =4, default=fval)
+        srf.close()
         
     def pretty_string(self, start_indent = 0):
         retstr = ""

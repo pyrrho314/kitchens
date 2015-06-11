@@ -24,5 +24,3 @@ type_shelf_names = {
 }
 
 type_store_precedence = [ "TABLE", "SETREF" ]
-
-

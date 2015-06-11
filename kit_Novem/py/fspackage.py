@@ -16,6 +16,20 @@ def recursive_listdir(dirname = "."):
     return rfilelist
 
 class FSPackage(object):
+    """Used to move files between the working directory and
+    some other file storage location. This is a base
+    class for packagers that might retrieve files from other stores
+    such as cloud storage services such as S3. 
+    
+    The base class uses another mounted drive, that is,
+    it does regular system file copies.
+    
+    Attributes
+    ----------
+    
+    setref (dict): the setref dictionary for the file being transferred.
+    
+    """
     setref = None
     storename = None
     elements = {}
