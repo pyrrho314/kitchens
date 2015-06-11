@@ -138,7 +138,12 @@ class SetRefPrimitives(PrimitiveSet):
             log.status(tstr)
             log.debug(inp.pretty_setref())
         yield rc
-        
+    
+    def showContext(self, rc):
+        log.status(ksutil.dict2pretty("local parameters", rc.localparms))
+        log.status(ksutil.dict2pretty("global parameters", rc))
+        yield rc
+            
     def writeAndDrop(self, rc):
         settype = rc["settype"]
         if settype == None:

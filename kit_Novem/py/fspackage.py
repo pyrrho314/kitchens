@@ -166,7 +166,11 @@ class FSPackage(object):
         return pfx
     def get_store_sidecars(self, elements = None):
         template_dsc = self.get_ware_spec(elements = elements)
-        if "sidecar_templs" in template_dsc:
+        if "sidecar_templates" in template_dsc:
+            return template_dsc["sidecar_templates"]
+        elif "sidecar_templ" in template_dsc:
+            return template_dsc["sidecar_templ"]
+        elif "sidecar_templs" in template_dsc:
             return template_dsc["sidecar_templs"]
         return None
         
