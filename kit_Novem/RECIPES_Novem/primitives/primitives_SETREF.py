@@ -45,6 +45,15 @@ class SetRefPrimitives(PrimitiveSet):
             log.info("(pSR18) %s-> %s" % (inp.basename, result))
         yield rc
     
+    def emitQAReport(self, rc):
+        import random
+        event = {"report":"dict",
+                 "event":"random",
+                 "number": random.randrange(1,100)
+                }
+        rc.report_qametric( event )
+        yield rc
+    
     def filterOutNot(self, rc):
         for inp in rc.get_inputs():
             typs = inp.get_types()
