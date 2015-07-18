@@ -157,6 +157,7 @@ class FSPackage(object):
             if elem not in whelem:
                 whelem[elem] = "\n{%s}\n" % elem
         temp = template_dsc["path_templ"]
+        #print "fs160:", temp
         #print "fs107:", whelem
         pfx_ml = temp.format(**whelem)
         pfx = pfx_ml.split()[0]
@@ -164,6 +165,20 @@ class FSPackage(object):
             pfx = pfx[:-1]
             
         return pfx
+        
+    def get_store_template(self, elements = None):
+        whelem = deepcopy(self.warehouse_elements)
+        whelem.update(elements)
+        
+        shelf_name = (  whelem["shelf_name"] 
+                            if "shelf_name" in elements 
+                            else "processed_data"
+                     )
+        
+        template_dsc = self.shelf_addresses[shelf_name]
+        temp = template_dsc["path_templ"]
+        return temp 
+        
     def get_store_sidecars(self, elements = None):
         template_dsc = self.get_ware_spec(elements = elements)
         if "sidecar_templates" in template_dsc:
@@ -253,11 +268,6 @@ class FSPackage(object):
         curdir = os.getcwd()
         print "bp52:", self.storename
         basename = os.path.basename(self.storename)
-        # raw_data_legacy heuristic
-        if "Northern_AOI" in self.storename:
-            basename = "NPH-%s" % basename
-        if "Southern_AOI" in self.storename:
-            basename = "SPH-%s" % basename
         localpath = os.path.join(curdir, basename)
         self.local_path = localpath
         
