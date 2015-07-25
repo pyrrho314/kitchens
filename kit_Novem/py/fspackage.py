@@ -5,6 +5,8 @@ import re
 import shutil
 from copy import deepcopy, copy
 
+from astrodata.adutils import ksutil as ks
+
 def recursive_listdir(dirname = "."):
     rfilelist = []
     print "fs10:", dirname
@@ -127,15 +129,27 @@ class FSPackage(object):
         fullpath = path
         return fullpath
     
-    def get_store_dirname(self, setref = None):
+    def get_store_dirname(self, setref = None, elements= None):
         if setref:
             self.elements_from_setref(setref)
-        settype = self.elements["type"]
-        if settype in self.type_shelf_names:
-            shelfname = self.type_shelf_names[settype]
-            storepath = self.format_storage_location(shelfname)
+        if elements:
+            print ks.dict2pretty("fsp134:elements", self.elements)
+            self.elements.update(elements)
+            print ks.dict2pretty("fsp134:elements", self.elements)
+            
+        if "shelf_name" in self.elements:
+            # presumably by override
+            storepath = self.format_storage_location(
+                                                    self.elements["shelf_name"]
+                                                    )
         else:
-            storepath = self.format_storage_location(shelfname)
+            # find the shelf based on types
+            settype = self.elements["type"]
+            if settype in self.type_shelf_names:
+                shelfname = self.type_shelf_names[settype]
+                storepath = self.format_storage_location(shelfname)
+            else:
+                storepath = self.format_storage_location(shelfname)
         self.store_dirname = storepath
         return storepath
     
@@ -190,8 +204,8 @@ class FSPackage(object):
         return None
         
         
-    def get_store_path(self, setref = None):
-        storepath = self.get_store_dirname(setref)
+    def get_store_path(self, setref = None, elements = None):
+        storepath = self.get_store_dirname(setref, elements = elements)
         storename = os.path.join(storepath, setref.basename)
         self.storename = storename
         return storename
