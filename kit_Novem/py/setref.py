@@ -155,7 +155,8 @@ class SetrefData(generaldata.GeneralData):
         self.initarg = initarg
         #print "sr35:",initarg
         self._accept_initarg(initarg)
-        #print "sr37:", self.filename
+        if DEBUG:
+            print ks.dict2pretty( "sr37: __init__", self._setref) 
         if force_load:
             self.load_header()
             self.load()
@@ -192,7 +193,8 @@ class SetrefData(generaldata.GeneralData):
         return rstr
         
     def _accept_initarg(self, initarg):
-        #print "sr187: initarg", initarg
+        if DEBUG:
+            print ks.dict2pretty( "sr187: initarg", initarg)
         if isinstance(initarg, basestring):
             self.filename = initarg
             self._loaded_by = "filename"
@@ -358,10 +360,12 @@ class SetrefData(generaldata.GeneralData):
         () We can checksum, and put that in the set
         """
         # setref is all header
-        if not self.filename:
-            return
+        DEBUG = False
         if DEBUG:
             print "sr354: filename", self.filename
+        if not self.filename:
+            return
+
         setrefout = self._make_setref_fname()
         if DEBUG:
             print "sr221:",setrefout
@@ -377,20 +381,21 @@ class SetrefData(generaldata.GeneralData):
             if DEBUG:
                 print "sr363: setrefout", setrefout
             in_setrefn = setrefout
-        if os.path.exists(in_setrefn):
-            if DEBUG:
-                print "sr366: load_header setref_fname = "+self.setref_fname
-            try:
-                jsonfile = open(in_setrefn)
-                self._setref = json.load(jsonfile)
-                jsonfile.close()
-            except:
-                print "sr258:MALFORMED SETREF:", in_setrefn
-                raise
-        else:
-            self.put("_data.filename", self.filename)
-            self.put("_data.setref_fname", self.setref_fname)
-            
+        if not self._loaded_by == "setref":
+            if os.path.exists(in_setrefn):
+                if DEBUG:
+                    print "sr366: load_header setref_fname = "+self.setref_fname
+                try:
+                    jsonfile = open(in_setrefn)
+                    self._setref = json.load(jsonfile)
+                    jsonfile.close()
+                except:
+                    print "sr258:MALFORMED SETREF:", in_setrefn
+                    raise
+    
+        self.put("_data.filename", self.filename)
+        self.put("_data.setref_fname", self.setref_fname)
+        
     def load(self, initarg = None, force_load = False):
         if DEBUG:
             print "sr379: load doing nothing"

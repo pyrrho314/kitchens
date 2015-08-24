@@ -160,10 +160,12 @@ class FSPackage(object):
         whelem.update(elements)
         
         shelf_name = (  whelem["shelf_name"] 
-                            if "shelf_name" in elements 
-                            else "processed_data"
+                            if "shelf_name" in whelem 
+                            else None
                      )
         
+        if shelf_name == None:
+            return None
         template_dsc = self.shelf_addresses[shelf_name]
         req = template_dsc["requires"]
         for elem in req:
