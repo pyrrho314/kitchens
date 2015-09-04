@@ -13,24 +13,25 @@ try:
         db = None
         user = None
         password = None
+        collection_name = None
+        collection = None
         
         def __init__(self):
-            self.get_connection()
-        ##
-        ####
-        #####
-        ## properties
-        #####
-        ####
-        def get_connection(self,connection_name = None):
-            """Used to make Mongo connection. Can be called to establish
-            connection or as property (i.e. cnx = self.connection). The 
-            __init__ will presumably called get_connection initially so 
-            generally it will be used as a get property.
+            pass
+        
+        def configure(self, options):
+            collection_name = None
+            config_location = None
+            config_key = None
             
-            There is no set_connection(..) call. 
-            """
-            mtret = compose_multi_table("*/dbinfo", "mdb_info", just_one=True)
+            if "collection_name" in options:
+                collection_name = options["collection_name"]
+            if "db_info" in options:
+                config_location = options["db_info"]["location"]    
+                config_key      = options["db_info"]["key"]    
+                config_location = options["db_info"]["location"]    
+
+            mtret = compose_multi_table(config_location, config_key, just_one=True)
             mdbinfo = mtret["mdb_info"]
             
             print ksutil.dict2pretty("mdb_info", mdbinfo)
@@ -38,7 +39,25 @@ try:
             self.dbname   = mdbinfo["db"]
             self.user     = mdbinfo["user"]
             self.password = base64.b64decode(mdbinfo["password"])
+
+            self.get_connection()
+            if collection_name:
+                self.collection_name = collection_name
+                self.collection = self.db[collection_name]
+        ##
+        ####
+        #####
+        ## properties
+        #####
+        ####
+        def get_connection(self):
+            """Used to make Mongo connection. Can be called to establish
+            connection or as property (i.e. cnx = self.connection). The 
+            __init__ will presumably called get_connection initially so 
+            generally it will be used as a get property.
             
+            There is no set_connection(..) call. 
+            """
             if not MongoPublisher._connection:
                 connection = MongoClient(self.host)
                 connected = connection[self.dbname].authenticate(self.user, self.password)
@@ -50,7 +69,14 @@ try:
         # connection property, no setter or delete
         connection = property(get_connection)
         #
-    
+        def publish_document(self, doc):
+            doclist = None
+            if isinstance(doc, list):
+                doclist = doc
+            else:
+                doclist = [doc]
+            for doci in doclist:
+                self.collection.save(doci)
     
     
 except:
